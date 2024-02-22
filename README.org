@@ -1,15 +1,13 @@
-#+title: Flakes
-
-* Resources
+** Resources
 
 > [[https://discourse.nixos.org/t/proper-way-to-build-a-remote-system-with-flakes/17661][Proper way to build a remote system with flakes - discourse.nixos.org]]
 
-* Using
+** Using
 
 BUILDING TO A REMOTE SERVER
 ~# nixos-rebuild switch --flake .#system --target-host root@192.168.8.117~
 
-* Minimal flake example
+** Minimal flake example
 
 #+begin_src nix
 {
