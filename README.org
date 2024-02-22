@@ -1,0 +1,38 @@
+#+title: Flakes
+
+* Resources
+
+> [[https://discourse.nixos.org/t/proper-way-to-build-a-remote-system-with-flakes/17661][Proper way to build a remote system with flakes - discourse.nixos.org]]
+
+* Using
+
+BUILDING TO A REMOTE SERVER
+~# nixos-rebuild switch --flake .#system --target-host root@192.168.8.117~
+
+* Minimal flake example
+
+#+begin_src nix
+{
+  description = "Minimal nixOS flake";
+  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-21.11";
+  
+  outputs = { self, nixpkgs }: {
+    nixosConfigurations = {
+      staging = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [ ./configuration.nix ];
+        # Example how to pass an arg to configuration.nix:
+        specialArgs = { hostname = "staging"; };
+      }; 
+    };
+  };
+}
+
+# ... configuration.nix:
+# { config, pkgs, hostname, modulesPath, ... }:
+# {
+# imports = [ (modulesPath + "/virtualisation/digital-ocean-config.nix") ];
+# networking.hostName = hostname;
+# ...
+# }
+#+end_src

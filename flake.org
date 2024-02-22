@@ -1,0 +1,110 @@
+#+title: Asynthe's flakes
+#+property: header-args :tangle flake.nix
+#+auto_tangle: t
+
+
+#+begin_src nix
+# ... configuration.nix:
+# { config, pkgs, hostname, modulesPath, ... }:
+# {
+# imports = [ (modulesPath + "/virtualisation/digital-ocean-config.nix") ];
+# networking.hostName = hostname;
+# ...
+# }
+#+end_src
+
+* Inputs
+
+#+begin_src nix
+{
+  description = "Minimal nixOS flake";
+#+end_src
+
+Inputs
+#+begin_src nix
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-23.11";
+    impermanence.url = "github:nix-community/impermanence";
+    sops-nix.url = "github:Mic92/sops-nix";
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+#+end_src
+
+* Machines
+
+#+begin_src nix
+    outputs = inputs @ {
+        self,
+        nixpkgs,
+        disko,
+        impermanence,
+        sops-nix,
+    }:
+    {
+    nixosConfigurations = {
+#+end_src
+
+** Server
+
+PC Server that I currently manage and connect to.
+
+#+begin_src nix
+      server = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit
+          username
+          hostname
+          inputs
+          ;
+          hostname = "server"
+        };
+        modules = [
+          ./hosts/linux/server
+          disko.nixosModules.disko
+          impermanence.nixosModules.impermanence
+        ];
+      };
+#+end_src
+
+** Hyper-V
+
+This is my first try of disko and nixos-anywhere.
+With also building straight from github repo
+
+#+begin_src nix
+      hyperv = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit
+          inputs
+          ;
+        };
+        modules = [
+          ./hosts/hyperv
+          disko.nixosModules.disko
+          impermanence.nixosModules.impermanence
+        ];
+      };
+#+end_src
+
+** Staging
+
+#+begin_src nix
+      staging = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [ ./configuration.nix ];
+        # Example how to pass an arg to configuration.nix:
+        specialArgs = { hostname = "staging"; };
+      }; 
+#+end_src
+
+** Closing Brackets
+
+#+begin_src nix
+    };
+  };
+}
+#+end_src
