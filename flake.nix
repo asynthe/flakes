@@ -26,16 +26,49 @@ outputs = inputs @ {
     nixos-generators,
 }:
 {
+
+packages.x86_64-linux = {
+
+qcow = nixos-generators.nixosGenerate {
+  system = "x86_64-linux";
+  format = "qcow-efi";
+  specialArgs = { inherit
+    inputs
+    ;
+    hostname = "user";
+  };
+  modules = [
+    ./hosts/server-vm
+    disko.nixosModules.disko
+    impermanence.nixosModules.impermanence
+  ];
+};
+
+vbox = nixos-generators.nixosGenerate {
+  system = "x86_64-linux";
+  format = "vbox";
+  specialArgs = { inherit
+    inputs
+    ;
+    hostname = "user";
+  };
+  modules = [
+    ./hosts/server-vm
+    disko.nixosModules.disko
+    impermanence.nixosModules.impermanence
+  ];
+};
+
+};
+
 nixosConfigurations = {
 
 server = nixpkgs.lib.nixosSystem {
   system = "x86_64-linux";
   specialArgs = { inherit
-    username
-    hostname
     inputs
     ;
-    hostname = "server"
+    hostname = "server";
   };
   modules = [
     ./hosts/linux/server
@@ -50,7 +83,7 @@ redteam = nixpkgs.lib.nixosSystem {
   specialArgs = { inherit
     inputs
     ;
-    hostname = "server"
+    hostname = "redteam";
   };
   modules = [
     ./hosts/linux/server
@@ -65,6 +98,7 @@ blueteam = nixpkgs.lib.nixosSystem {
   specialArgs = { inherit
     inputs
     ;
+    hostname = "blueteam";
   };
   modules = [
     ./hosts/hyperv
@@ -79,7 +113,7 @@ hyperv = nixpkgs.lib.nixosSystem {
   specialArgs = { inherit
     inputs
     ;
-    #hostname = "hyperv";
+    hostname = "hyperv";
   };
   modules = [
     ./hosts/hyperv

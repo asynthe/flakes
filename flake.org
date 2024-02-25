@@ -2,6 +2,8 @@
 #+property: header-args :tangle flake.nix
 #+auto_tangle: t
 
+nix build .#hyperv
+
 * Inputs
 
 #+begin_src nix
@@ -27,7 +29,7 @@ inputs = {
 };
 #+end_src
 
-* Machines
+* Outputs
 
 #+begin_src nix
 outputs = inputs @ {
@@ -40,6 +42,57 @@ outputs = inputs @ {
     nixos-generators,
 }:
 {
+#+end_src
+
+** Images
+
+#+begin_src nix
+packages.x86_64-linux = {
+#+end_src
+
+*** Test
+
+#+begin_src nix
+qcow = nixos-generators.nixosGenerate {
+  system = "x86_64-linux";
+  format = "qcow-efi";
+  specialArgs = { inherit
+    inputs
+    ;
+    hostname = "user";
+  };
+  modules = [
+    ./hosts/server-vm
+    disko.nixosModules.disko
+    impermanence.nixosModules.impermanence
+  ];
+};
+
+vbox = nixos-generators.nixosGenerate {
+  system = "x86_64-linux";
+  format = "vbox";
+  specialArgs = { inherit
+    inputs
+    ;
+    hostname = "user";
+  };
+  modules = [
+    ./hosts/server-vm
+    disko.nixosModules.disko
+    impermanence.nixosModules.impermanence
+  ];
+};
+#+end_src
+
+*** Closing bracket
+
+#+begin_src nix
+};
+#+end_src
+
+** Machines
+
+#+begin_src nix
 nixosConfigurations = {
 #+end_src
 
@@ -51,11 +104,9 @@ Copied from my personal configuration, just to test stuff.
       server = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = { inherit
-          username
-          hostname
           inputs
           ;
-          hostname = "server"
+          hostname = "server";
         };
         modules = [
           ./hosts/linux/server
@@ -74,7 +125,7 @@ redteam = nixpkgs.lib.nixosSystem {
   specialArgs = { inherit
     inputs
     ;
-    hostname = "server"
+    hostname = "redteam";
   };
   modules = [
     ./hosts/linux/server
@@ -93,6 +144,7 @@ blueteam = nixpkgs.lib.nixosSystem {
   specialArgs = { inherit
     inputs
     ;
+    hostname = "blueteam";
   };
   modules = [
     ./hosts/hyperv
@@ -112,7 +164,7 @@ hyperv = nixpkgs.lib.nixosSystem {
   specialArgs = { inherit
     inputs
     ;
-    #hostname = "hyperv";
+    hostname = "hyperv";
   };
   modules = [
     ./hosts/hyperv
