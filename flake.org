@@ -2,17 +2,6 @@
 #+property: header-args :tangle flake.nix
 #+auto_tangle: t
 
-
-#+begin_src nix
-# ... configuration.nix:
-# { config, pkgs, hostname, modulesPath, ... }:
-# {
-# imports = [ (modulesPath + "/virtualisation/digital-ocean-config.nix") ];
-# networking.hostName = hostname;
-# ...
-# }
-#+end_src
-
 * Inputs
 
 #+begin_src nix
@@ -22,35 +11,41 @@
 
 Inputs
 #+begin_src nix
-  inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-23.11";
-    impermanence.url = "github:nix-community/impermanence";
-    sops-nix.url = "github:Mic92/sops-nix";
-    disko = {
-      url = "github:nix-community/disko";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+inputs = {
+  nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+  nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-23.11";
+  impermanence.url = "github:nix-community/impermanence";
+  sops-nix.url = "github:Mic92/sops-nix";
+  disko = {
+    url = "github:nix-community/disko";
+    inputs.nixpkgs.follows = "nixpkgs";
   };
+  nixos-generators = {
+    url = "github:nix-community/nixos-generators";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
+};
 #+end_src
 
 * Machines
 
 #+begin_src nix
-    outputs = inputs @ {
-        self,
-        nixpkgs,
-        disko,
-        impermanence,
-        sops-nix,
-    }:
-    {
-    nixosConfigurations = {
+outputs = inputs @ {
+    self,
+    nixpkgs,
+    nixpkgs-stable,
+    disko,
+    impermanence,
+    sops-nix,
+    nixos-generators,
+}:
+{
+nixosConfigurations = {
 #+end_src
 
-** Server
+** Basic
 
-PC Server that I currently manage and connect to.
+Copied from my personal configuration, just to test stuff.
 
 #+begin_src nix
       server = nixpkgs.lib.nixosSystem {
@@ -70,35 +65,61 @@ PC Server that I currently manage and connect to.
       };
 #+end_src
 
-** Hyper-V
-
-This is my first try of disko and nixos-anywhere.
-With also building straight from github repo
+** Red Team
 
 #+begin_src nix
-      hyperv = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = { inherit
-          inputs
-          ;
-        };
-        modules = [
-          ./hosts/hyperv
-          disko.nixosModules.disko
-          impermanence.nixosModules.impermanence
-        ];
-      };
+redteam = nixpkgs.lib.nixosSystem {
+  system = "x86_64-linux";
+  #format = "all" # How to do this?
+  specialArgs = { inherit
+    inputs
+    ;
+    hostname = "server"
+  };
+  modules = [
+    ./hosts/linux/server
+    disko.nixosModules.disko
+    impermanence.nixosModules.impermanence
+  ];
+};
 #+end_src
 
-** Staging
+** Blue Team
 
 #+begin_src nix
-      staging = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        modules = [ ./configuration.nix ];
-        # Example how to pass an arg to configuration.nix:
-        specialArgs = { hostname = "staging"; };
-      }; 
+blueteam = nixpkgs.lib.nixosSystem {
+  system = "x86_64-linux";
+  #format = "all" # How to do this?
+  specialArgs = { inherit
+    inputs
+    ;
+  };
+  modules = [
+    ./hosts/hyperv
+    disko.nixosModules.disko
+    impermanence.nixosModules.impermanence
+  ];
+};
+
+#+end_src
+
+** Hyper-V
+
+#+begin_src nix
+hyperv = nixpkgs.lib.nixosSystem {
+  system = "x86_64-linux";
+  format = "hyperv";
+  specialArgs = { inherit
+    inputs
+    ;
+    #hostname = "hyperv";
+  };
+  modules = [
+    ./hosts/hyperv
+    disko.nixosModules.disko
+    impermanence.nixosModules.impermanence
+  ];
+};
 #+end_src
 
 ** Closing Brackets

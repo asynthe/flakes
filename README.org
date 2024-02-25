@@ -1,11 +1,23 @@
-** Resources
+** Using
 
 > [[https://discourse.nixos.org/t/proper-way-to-build-a-remote-system-with-flakes/17661][Proper way to build a remote system with flakes - discourse.nixos.org]]
 
-** Using
-
-BUILDING TO A REMOTE SERVER
+Building to a remote server
+~# nixos-rebuild switch --flake .#myMachine --target-host user@system~
+_examples_:
 ~# nixos-rebuild switch --flake .#system --target-host root@192.168.8.117~
+~# nixos-rebuild switch --flake .#dubedary --target-host root@192.168.8.117~
+
+NixOS system in ./result
+
+The build command to end up with a nixOS in ./result:
+
+1. Use this one if you don’t have nixOS but only nix available (e.g. on a CI action)
+   ~# nix build .#nixosConfigurations.staging.config.system.build.toplevel~
+
+2. ~# nixos-rebuild build --flake .#staging~
+   Note that nixosConfigurations prefix is ommitted if nixos-rebuild is used.
+   The error messages differ and are somewhat more usable via nixos-rebuild command, although it lacks a -o flag, so you can’t build multiple results next to each other without manually renaming them between builds.
 
 ** Minimal flake example
 

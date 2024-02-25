@@ -1,11 +1,3 @@
-# ... configuration.nix:
-# { config, pkgs, hostname, modulesPath, ... }:
-# {
-# imports = [ (modulesPath + "/virtualisation/digital-ocean-config.nix") ];
-# networking.hostName = hostname;
-# ...
-# }
-
 {
   description = "Minimal nixOS flake";
 
@@ -18,14 +10,20 @@ inputs = {
     url = "github:nix-community/disko";
     inputs.nixpkgs.follows = "nixpkgs";
   };
+  nixos-generators = {
+    url = "github:nix-community/nixos-generators";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
 };
 
 outputs = inputs @ {
     self,
     nixpkgs,
+    nixpkgs-stable,
     disko,
     impermanence,
     sops-nix,
+    nixos-generators,
 }:
 {
 nixosConfigurations = {
@@ -46,8 +44,24 @@ server = nixpkgs.lib.nixosSystem {
   ];
 };
 
-hyperv = nixpkgs.lib.nixosSystem {
+redteam = nixpkgs.lib.nixosSystem {
   system = "x86_64-linux";
+  #format = "all" # How to do this?
+  specialArgs = { inherit
+    inputs
+    ;
+    hostname = "server"
+  };
+  modules = [
+    ./hosts/linux/server
+    disko.nixosModules.disko
+    impermanence.nixosModules.impermanence
+  ];
+};
+
+blueteam = nixpkgs.lib.nixosSystem {
+  system = "x86_64-linux";
+  #format = "all" # How to do this?
   specialArgs = { inherit
     inputs
     ;
@@ -59,11 +73,19 @@ hyperv = nixpkgs.lib.nixosSystem {
   ];
 };
 
-staging = nixpkgs.lib.nixosSystem {
+hyperv = nixpkgs.lib.nixosSystem {
   system = "x86_64-linux";
-  modules = [ ./configuration.nix ];
-  # Example how to pass an arg to configuration.nix:
-  specialArgs = { hostname = "staging"; };
+  format = "hyperv";
+  specialArgs = { inherit
+    inputs
+    ;
+    #hostname = "hyperv";
+  };
+  modules = [
+    ./hosts/hyperv
+    disko.nixosModules.disko
+    impermanence.nixosModules.impermanence
+  ];
 };
 
 };
