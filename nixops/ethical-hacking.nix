@@ -41,4 +41,14 @@
       { adapterType = "82540EM"; attachedTo = "IntNet"; hostInterface = "Internal LAN"; }
     ];
   };
+
+  ubuntu-vm = { config, pkgs, lib, ... }: {
+    deployment.targetEnv = "virtualBox";
+    deployment.virtualBox.headless = false;  # Assuming you may want UI access
+    deployment.virtualBox.memorySize = 2048; # Adjust as needed
+    # Define the network to attach to the internal network
+    deployment.virtualBox.networks = [
+      { adapterType = "82540EM"; attachedTo = "IntNet"; hostInterface = "Internal LAN"; }
+    ];
+  };
 }
