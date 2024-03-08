@@ -1,6 +1,6 @@
 { config, ... }: {
 
-    import = [
+    imports = [
 
         # Boot
 	../modules/boot/grub_anywhere.nix # Grub for nixos-anywhere.
