@@ -1,8 +1,9 @@
 { config, lib, pkgs, modulesPath, ... }: {
 
     imports = [
-
-        (modulesPath + "/profiles/qemu-guest.nix")
+        
+	(modulesPath + "/installer/scan/not-detected.nix")
+	(modulesPath + "/profiles/qemu-guest.nix")
 
     ];
 
