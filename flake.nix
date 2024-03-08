@@ -35,6 +35,22 @@
     # System configurations
     nixosConfigurations = {
 
+        # Anywhere
+        anywhere = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            specialArgs = { inherit
+                inputs
+                ;
+                hostname = "testing";
+		device = "/dev/vda";
+            };
+            modules = [
+                ./hosts/anywhere
+                disko.nixosModules.disko
+                impermanence.nixosModules.impermanence
+            ];
+        };
+
         # Testing
         testing = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
