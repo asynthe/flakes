@@ -4,7 +4,7 @@
     environment.persistence."/persist/system" = {
         hideMounts = true;
         directories = [
-            #"/etc/nixos" # Move configuration here ? Don't think so
+            "/etc/nixos"
             "/var/log"
             "/var/lib/bluetooth"
             "/var/lib/nixos"
