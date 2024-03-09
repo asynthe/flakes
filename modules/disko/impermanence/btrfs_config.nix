@@ -8,7 +8,9 @@ in {
 
     disko.devices = {
 
-        disk.main.${device} = {
+        # Main disk
+        disk.main = {
+	    device = "${device}";
             type = "disk";
             content.type = "gpt";
             content.partitions = {
@@ -42,22 +44,21 @@ in {
 	# Root lvm
         lvm_vg.root_vg = {
 	    type = "lvm_vg";
-
             lvs.root.size = "100%FREE";
             lvs.root.content.type = "btrfs";
             lvs.root.content.extraArgs = [ "-f" ];
             lvs.root.content.subvolumes = {
 
 	            # Root subvolume
-                    subvolumes."/root".mountpoint = "/";
+                    "/root".mountpoint = "/";
 
 	            # Persist subvolume
-                    subvolumes."/persist".mountOptions = [ "subvol=persist" "noatime" ];
-                    subvolumes."/persist".mountpoint = "/persist";
+                    "/persist".mountOptions = [ "subvol=persist" "noatime" ];
+                    "/persist".mountpoint = "/persist";
 
 	            # Nix subvolume
-                    subvolumes."/nix".mountOptions = [ "subvol=nix" "noatime" ];
-                    subvolumes."/nix".mountpoint = "/nix";
+                    "/nix".mountOptions = [ "subvol=nix" "noatime" ];
+                    "/nix".mountpoint = "/nix";
 	    };
 	};
     };
