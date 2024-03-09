@@ -10,9 +10,6 @@
         ../modules/disko/impermanence/btrfs_module.nix
 	#../modules/disko/ext4_lvm.nix
 
-	# Databases
-	#../modules/db/postgresql.nix
-
 	# System
 	../modules/system/console.nix
 	../modules/system/pkgs.nix
@@ -23,6 +20,9 @@
 	#../modules/monitoring/grafana.nix
 	#../modules/monitoring/loki.nix
 	#../modules/monitoring/prometheus.nix
+
+	# Services
+	#../modules/services/postgresql.nix
 
 	# Security
 	#../modules/security/security-tool-box.nix
