@@ -1,8 +1,14 @@
-{ inputs, device, ... }: {
+{ inputs, device, ... }: 
 
-    disko.devices.disk = {
+let
 
-        main.${device} = {
+    device = "/dev/vda";
+
+in {
+
+    disko.devices = {
+
+        disk.main.${device} = {
             type = "disk";
             content.type = "gpt";
             content.partitions = {
@@ -33,27 +39,26 @@
             };
         };
 
-        lvm_vg = {
-            root_vg.type = "lvm_vg";
-            root_vg.lvs = {
+	# Root lvm
+        lvm_vg.root_vg = {
+	    type = "lvm_vg";
 
-                root.size = "100%FREE";
-                root.content.type = "btrfs";
-                root.content.extraArgs = ["-f"];
-                root.content.subvolumes = {
+            lvs.root.size = "100%FREE";
+            lvs.root.content.type = "btrfs";
+            lvs.root.content.extraArgs = [ "-f" ];
+            lvs.root.content.subvolumes = {
 
 	            # Root subvolume
                     subvolumes."/root".mountpoint = "/";
 
 	            # Persist subvolume
-                    subvolumes."/persist".mountOptions = ["subvol=persist" "noatime"];
+                    subvolumes."/persist".mountOptions = [ "subvol=persist" "noatime" ];
                     subvolumes."/persist".mountpoint = "/persist";
 
 	            # Nix subvolume
-                    subvolumes."/nix".mountOptions = ["subvol=nix" "noatime"];
+                    subvolumes."/nix".mountOptions = [ "subvol=nix" "noatime" ];
                     subvolumes."/nix".mountpoint = "/nix";
-                };
-            };
-        };
+	    };
+	};
     };
 }

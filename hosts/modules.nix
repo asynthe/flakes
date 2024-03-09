@@ -6,9 +6,9 @@
 	../modules/boot/grub_anywhere.nix # Grub for nixos-anywhere.
 
         # Disk configurations
-        #../modules/disko/btrfs_impermanence_config.nix
-	../modules/disko/btrfs_impermanence_config_unformatted.nix
+        ../modules/disko/btrfs_impermanence_config.nix
         ../modules/disko/btrfs_impermanence_module.nix
+	#../modules/disko/btrfs_impermanence_config_unformatted.nix
 	#../modules/disko/ext4_lvm.nix
 
 	# Databases
