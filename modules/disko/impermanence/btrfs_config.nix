@@ -1,11 +1,8 @@
-{ ... }: 
-
 let
 
     device = "/dev/vda";
 
 in {
-
     disko.devices = {
 
         # Main disk
@@ -29,9 +26,10 @@ in {
                 esp.content.mountpoint = "/boot";
 
 		# Swap
-                swap.size = "4G";
-                swap.content.type = "swap";
-                swap.content.resumeDevice = true;
+		#swap.type = "8200";
+                #swap.size = "4G";
+                #swap.content.type = "swap";
+                #swap.content.resumeDevice = true;
 
 		# Root
                 root.name = "root";

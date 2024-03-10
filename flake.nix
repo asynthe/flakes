@@ -51,7 +51,7 @@
             ];
         };
 
-        # Testing
+        # Testing (Impermanence)
         testing = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
             specialArgs = { inherit
@@ -67,7 +67,7 @@
             ];
         };
 
-        # Server for testing configurations
+        # Server
         server = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
             specialArgs = { inherit
@@ -89,6 +89,7 @@
                 inputs
                 ;
                 hostname = "redteam";
+		device = "/dev/vda";
             };
             modules = [
                 ./hosts/redteam
@@ -112,6 +113,7 @@
             ];
 	};
     };
+
     # Images
     packages.x86_64-linux = {
         qcow = nixos-generators.nixosGenerate {
@@ -144,6 +146,5 @@
             ];
         };
     };
-
     };
 }

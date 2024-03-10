@@ -3,7 +3,7 @@
     imports = [
 
         # Boot
-	../modules/boot/grub_anywhere.nix # Grub for nixos-anywhere.
+	#../modules/boot/grub.nix
 
         # Disk configurations
         #../modules/disko/impermanence/btrfs_config.nix
@@ -25,9 +25,6 @@
 
 	# Services
 	#../modules/services/postgresql.nix
-
-	# Security
-	#../modules/security/security-tool-box.nix
 
     ];
 }

@@ -1,0 +1,6 @@
+#[submodule "MEF_Lab"]
+#	path = MEF_Lab
+#	url = git@github.com:LachlanOverton/MEF_Lab.git
+[submodule "hosts/redteam/modules/nix-security-box"]
+	path = hosts/redteam/modules/nix-security-box
+	url = https://github.com/fabaff/nix-security-box
