@@ -6,7 +6,6 @@ Building to a remote server
 ~# nixos-rebuild switch --flake .#myMachine --target-host user@system~
 _examples_:
 ~# nixos-rebuild switch --flake .#system --target-host root@192.168.8.117~
-~# nixos-rebuild switch --flake .#dubedary --target-host root@192.168.8.117~
 
 NixOS system in ./result
 

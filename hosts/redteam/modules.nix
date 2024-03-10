@@ -6,13 +6,14 @@
 	./modules/disko/ext4.nix
 
 	./modules/boot.nix # Grub.
-	./modules/system/console.nix # Bigger font console.
-	./modules/system/pkgs.nix # Packages.
-	./modules/system/system.nix # System configuration.
-	./modules/system/user.nix # Users.
+	./modules/console.nix # Bigger font console.
+	./modules/pkgs.nix # Packages.
+	./modules/system.nix # System configuration.
+	./modules/user.nix # Users.
+
+        ./modules/network.nix
 
 	# Security Tool Box
-
         #./modules/nix-security-box/bluetooth.nix
         #./modules/nix-security-box/cloud.nix
         #./modules/nix-security-box/code.nix
@@ -31,7 +32,7 @@
         #./modules/nix-security-box/malware.nix
         #./modules/nix-security-box/misc.nix
         #./modules/nix-security-box/mobile.nix
-        ./modules/nix-security-box/network.nix
+        #./modules/nix-security-box/network.nix
         #./modules/nix-security-box/packet-generators.nix
         #./modules/nix-security-box/password.nix
         #./modules/nix-security-box/port-scanners.nix
