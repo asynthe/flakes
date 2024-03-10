@@ -3,50 +3,56 @@
     imports = [
 
 	# Disko
-	./modules/disko/ext4.nix
+	../../modules/disko/ext4.nix
 
-	./modules/boot.nix # Grub.
-	./modules/console.nix # Bigger font console.
-	./modules/pkgs.nix # Packages.
-	./modules/system.nix # System configuration.
-	./modules/user.nix # Users.
+	../../modules/redteam/boot.nix # Grub.
+	../../modules/redteam/console.nix # Bigger font console.
+	../../modules/redteam/pkgs.nix # Packages.
+	../../modules/redteam/system.nix # System configuration.
+	../../modules/redteam/user.nix # Users.
 
-        ./modules/network.nix
+	# Desktop Environment
+	../../modules/redteam/desktop/xfce.nix
+	#../../modules/redteam/desktop/i3.nix # In progress.
+	#../../modules/redteam/desktop/xmonad.nix # In progress.
 
 	# Security Tool Box
-        #./modules/nix-security-box/bluetooth.nix
-        #./modules/nix-security-box/cloud.nix
-        #./modules/nix-security-box/code.nix
-        #./modules/nix-security-box/container.nix
-        #./modules/nix-security-box/dns.nix
-        #./modules/nix-security-box/exploits.nix
-        #./modules/nix-security-box/forensics.nix
-        #./modules/nix-security-box/fuzzers.nix
-        #./modules/nix-security-box/generic.nix
-        #./modules/nix-security-box/hardware.nix
-        #./modules/nix-security-box/host.nix
-        #./modules/nix-security-box/information-gathering.nix
-        #./modules/nix-security-box/kubernetes.nix
-        #./modules/nix-security-box/ldap.nix
-        #./modules/nix-security-box/load-testing.nix
-        #./modules/nix-security-box/malware.nix
-        #./modules/nix-security-box/misc.nix
-        #./modules/nix-security-box/mobile.nix
-        #./modules/nix-security-box/network.nix
-        #./modules/nix-security-box/packet-generators.nix
-        #./modules/nix-security-box/password.nix
-        #./modules/nix-security-box/port-scanners.nix
-        #./modules/nix-security-box/proxies.nix
-        #./modules/nix-security-box/services.nix
-        #./modules/nix-security-box/smartcards.nix
-        #./modules/nix-security-box/terminals.nix
-        #./modules/nix-security-box/tls.nix
-        #./modules/nix-security-box/traffic.nix
-        #./modules/nix-security-box/tunneling.nix
-        #./modules/nix-security-box/voip.nix
-        #./modules/nix-security-box/web.nix
-        #./modules/nix-security-box/windows.nix
-        #./modules/nix-security-box/wireless.nix
+	# https://fabaff.github.io/nix-security-box/
+
+        #../../modules/redteam/security/1_all.nix # Full package set.
+        #../../modules/redteam/security/bluetooth.nix
+        #../../modules/redteam/security/cloud.nix
+        #../../modules/redteam/security/code.nix
+        #../../modules/redteam/security/container.nix
+        #../../modules/redteam/security/dns.nix
+        #../../modules/redteam/security/exploits.nix
+        #../../modules/redteam/security/forensics.nix
+        #../../modules/redteam/security/fuzzers.nix
+        #../../modules/redteam/security/generic.nix
+        #../../modules/redteam/security/hardware.nix
+        #../../modules/redteam/security/host.nix
+        #../../modules/redteam/security/information-gathering.nix
+        #../../modules/redteam/security/kubernetes.nix
+        #../../modules/redteam/security/ldap.nix
+        #../../modules/redteam/security/load-testing.nix
+        #../../modules/redteam/security/malware.nix
+        #../../modules/redteam/security/misc.nix
+        #../../modules/redteam/security/mobile.nix
+        #../../modules/redteam/security/network.nix
+        #../../modules/redteam/security/packet-generators.nix
+        #../../modules/redteam/security/password.nix
+        #../../modules/redteam/security/port-scanners.nix
+        #../../modules/redteam/security/proxies.nix
+        #../../modules/redteam/security/services.nix
+        #../../modules/redteam/security/smartcards.nix
+        #../../modules/redteam/security/terminals.nix
+        #../../modules/redteam/security/tls.nix
+        #../../modules/redteam/security/traffic.nix
+        #../../modules/redteam/security/tunneling.nix
+        #../../modules/redteam/security/voip.nix
+        #../../modules/redteam/security/web.nix
+        #../../modules/redteam/security/windows.nix
+        #../../modules/redteam/security/wireless.nix
 
     ];
 }

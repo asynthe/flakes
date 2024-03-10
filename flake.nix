@@ -90,6 +90,7 @@
                 ;
                 hostname = "redteam";
 		device = "/dev/vda";
+		user = "red";
             };
             modules = [
                 ./hosts/redteam
@@ -105,6 +106,8 @@
                 inputs
                 ;
                 hostname = "blueteam";
+		device = "/dev/vda";
+		user = "blue";
             };
             modules = [
                 ./hosts/blueteam
