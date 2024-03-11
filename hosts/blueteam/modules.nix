@@ -3,7 +3,7 @@
     imports = [
 
 	# Disko
-	./modules/disko/ext4.nix
+	../../modules/disko/ext4.nix
 
 	./modules/boot.nix # Grub.
 	./modules/console.nix # Bigger font console.
