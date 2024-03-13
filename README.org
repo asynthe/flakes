@@ -1,6 +1,11 @@
-** Using
-
+** Resources
 > [[https://discourse.nixos.org/t/proper-way-to-build-a-remote-system-with-flakes/17661][Proper way to build a remote system with flakes - discourse.nixos.org]]
+> [[https://github.com/nix-community/awesome-nix][Awesome Nix - github]]
+
+> Nix4Noobs VM
+
+
+** Usage
 
 Building to a remote server
 ~# nixos-rebuild switch --flake .#myMachine --target-host user@system~
@@ -18,11 +23,17 @@ The build command to end up with a nixOS in ./result:
    Note that nixosConfigurations prefix is ommitted if nixos-rebuild is used.
    The error messages differ and are somewhat more usable via nixos-rebuild command, although it lacks a -o flag, so you can’t build multiple results next to each other without manually renaming them between builds.
 
+** Building a qcow2 image
+
+> [[https://nix4noobs.com/nixos_vms/basic_vm/][Basic VM - Nix 4 Noobs]]
+
+...
+
 ** Flake example
 
-This defines a system configuration called ~computer1~, this configuration can be built on a NixOS system with the next command
+This defines a system configuration called ~computer1~, this configuration can be built on a NixOS system with the next command.
 #+begin_src nix
-$ sudo nixos-rebuild switch --flake path/to/flake#computer1
+$ sudo nixos-rebuild switch --flake /path/to/flake#computer1
 #+end_src
 
 -> ./flake.nix

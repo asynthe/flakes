@@ -128,7 +128,7 @@
                 hostname = "user";
             };
             modules = [
-                ./hosts/server-vm
+                ./images/
                 disko.nixosModules.disko
                 impermanence.nixosModules.impermanence
             ];
