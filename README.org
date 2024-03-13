@@ -57,20 +57,23 @@ flake.nix / default.nix / configuration.nix
         };
     };
 }
+#+end_src
 
-# /hosts/computer1
-# -> default.nix
-#{
-    #imports = [
-        #configuration.nix
-        #hardware-configuration.nix
-    #];
-#}
+-> /hosts/computer1/default.nix
+#+begin_src nix
+{
+    imports = [
+        configuration.nix
+        hardware-configuration.nix
+    ];
+}
+#+end_src
 
-# -> configuration.nix:
-# { config, pkgs, hostname, modulesPath, ... }:
-# {
-# networking.hostName = hostname;
-# ...
-# }
+-> /hosts/computer1/configuration.nix:
+#+begin_src nix
+{ config, pkgs, hostname, ... }: {
+
+    networking.hostName = hostname;
+    ...
+}
 #+end_src
