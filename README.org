@@ -18,29 +18,58 @@ The build command to end up with a nixOS in ./result:
    Note that nixosConfigurations prefix is ommitted if nixos-rebuild is used.
    The error messages differ and are somewhat more usable via nixos-rebuild command, although it lacks a -o flag, so you can’t build multiple results next to each other without manually renaming them between builds.
 
-** Minimal flake example
+** Flake example
 
+This defines a system configuration called ~computer1~, this configuration can be built on a NixOS system with the next command
+#+begin_src nix
+$ sudo nixos-rebuild switch --flake path/to/flake#computer1
+#+end_src
+
+flake.nix / default.nix / configuration.nix
 #+begin_src nix
 {
-  description = "Minimal nixOS flake";
-  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-21.11";
+    description = "Simple nixOS flake";
+    inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   
-  outputs = { self, nixpkgs }: {
-    nixosConfigurations = {
-      staging = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        modules = [ ./configuration.nix ];
-        # Example how to pass an arg to configuration.nix:
-        specialArgs = { hostname = "staging"; };
-      }; 
+    outputs = { 
+        self, 
+        nixpkgs 
+    }: {
+        nixosConfigurations = {
+            computer1 = nixpkgs.lib.nixosSystem {
+                system = "x86_64-linux";
+                specialArgs = {
+                    # Inherit argument from let here, or define arguments.
+                    #inherit argument; 
+                    hostname = "computer1"; 
+                };
+                modules = [ 
+                    ./hosts/computer1
+                    # Add inputs here (like disko.nixosModules.disko)
+                ];
+                # Example how to pass an arg to configuration.nix:       
+            };
+
+            #computer2 = nixpkgs.lib.nixosSystem {
+                #system = "x86_64-linux";
+                # ...
+            };
+        };
     };
-  };
 }
 
-# ... configuration.nix:
+# /hosts/computer1
+# -> default.nix
+#{
+    #imports = [
+        #configuration.nix
+        #hardware-configuration.nix
+    #];
+#}
+
+# -> configuration.nix:
 # { config, pkgs, hostname, modulesPath, ... }:
 # {
-# imports = [ (modulesPath + "/virtualisation/digital-ocean-config.nix") ];
 # networking.hostName = hostname;
 # ...
 # }
