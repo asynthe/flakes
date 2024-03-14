@@ -32,122 +32,109 @@
         nixos-generators,
     }: {
 
-    # System configurations
-    nixosConfigurations = {
+        # System configurations
+        nixosConfigurations = {
 
-        # Anywhere
-        anywhere = nixpkgs.lib.nixosSystem {
-            system = "x86_64-linux";
-            specialArgs = { inherit
-                inputs
-                ;
-                hostname = "testing";
-		device = "/dev/vda";
+            # Anywhere
+            anywhere = nixpkgs.lib.nixosSystem {
+                system = "x86_64-linux";
+                specialArgs = { inherit
+                    inputs
+                    ;
+                    hostname = "testing";
+            	device = "/dev/vda";
+                };
+                modules = [
+                    ./hosts/anywhere
+                    disko.nixosModules.disko
+                    impermanence.nixosModules.impermanence
+                ];
             };
-            modules = [
-                ./hosts/anywhere
-                disko.nixosModules.disko
-                impermanence.nixosModules.impermanence
-            ];
+
+            # Server
+            server = nixpkgs.lib.nixosSystem {
+                system = "x86_64-linux";
+                specialArgs = { inherit
+                    inputs
+                    ;
+                    hostname = "server";
+                };
+                modules = [
+                    ./hosts/server
+                    disko.nixosModules.disko
+                    impermanence.nixosModules.impermanence
+                ];
+            };
+
+            # Red Team
+            redteam = nixpkgs.lib.nixosSystem {
+                system = "x86_64-linux";
+                specialArgs = { inherit
+                    inputs
+                    ;
+                    hostname = "redteam";
+            	device = "/dev/vda";
+            	user = "red";
+                };
+                modules = [
+                    ./hosts/redteam
+                    disko.nixosModules.disko
+                    impermanence.nixosModules.impermanence
+                ];
+            };
+
+            # Blue Team
+            blueteam = nixpkgs.lib.nixosSystem {
+                system = "x86_64-linux";
+                specialArgs = { inherit
+                    inputs
+                    ;
+                    hostname = "blueteam";
+            	device = "/dev/vda";
+            	user = "blue";
+                };
+                modules = [
+                    ./hosts/blueteam
+                    disko.nixosModules.disko
+                    impermanence.nixosModules.impermanence
+                ];
+            };
         };
 
-        # Testing (Impermanence)
-        testing = nixpkgs.lib.nixosSystem {
-            system = "x86_64-linux";
-            specialArgs = { inherit
-                inputs
-                ;
-                hostname = "server";
-		device = "/dev/vda";
+        # Images
+        packages.x86_64-linux = {
+
+	    # Red Team - qcow2, vdi, ...
+            redteam = nixos-generators.nixosGenerate {
+                system = "x86_64-linux";
+                format = "qcow-efi"; # ALL?
+                specialArgs = { inherit
+                    inputs
+                    ;
+                    hostname = "red";
+                };
+                modules = [
+                    ./images/redteam
+                    disko.nixosModules.disko
+                    impermanence.nixosModules.impermanence
+                ];
             };
-            modules = [
-                ./hosts/testing
-                disko.nixosModules.disko
-                impermanence.nixosModules.impermanence
-            ];
+
+	    # Blue Team - qcow2, vdi, ...
+            blueteam = nixos-generators.nixosGenerate {
+                system = "x86_64-linux";
+                format = "vbox"; # ALL?
+                specialArgs = { inherit
+                    inputs
+                    ;
+                    hostname = "blue";
+                };
+                modules = [
+                    ./images/blueteam
+                    disko.nixosModules.disko
+                    impermanence.nixosModules.impermanence
+                ];
+            };
         };
-
-        # Server
-        server = nixpkgs.lib.nixosSystem {
-            system = "x86_64-linux";
-            specialArgs = { inherit
-                inputs
-                ;
-                hostname = "server";
-            };
-            modules = [
-                ./hosts/server
-                disko.nixosModules.disko
-                impermanence.nixosModules.impermanence
-            ];
-        };
-
-	# Red Team
-        redteam = nixpkgs.lib.nixosSystem {
-            system = "x86_64-linux";
-            specialArgs = { inherit
-                inputs
-                ;
-                hostname = "redteam";
-		device = "/dev/vda";
-		user = "red";
-            };
-            modules = [
-                ./hosts/redteam
-                disko.nixosModules.disko
-                impermanence.nixosModules.impermanence
-            ];
-	};
-
-	# Blue Team
-        blueteam = nixpkgs.lib.nixosSystem {
-            system = "x86_64-linux";
-            specialArgs = { inherit
-                inputs
-                ;
-                hostname = "blueteam";
-		device = "/dev/vda";
-		user = "blue";
-            };
-            modules = [
-                ./hosts/blueteam
-                disko.nixosModules.disko
-                impermanence.nixosModules.impermanence
-            ];
-	};
-    };
-
-    # Images
-    packages.x86_64-linux = {
-        qcow = nixos-generators.nixosGenerate {
-            system = "x86_64-linux";
-            format = "qcow-efi";
-            specialArgs = { inherit
-                inputs
-                ;
-                hostname = "user";
-            };
-            modules = [
-                ./images/
-                disko.nixosModules.disko
-                impermanence.nixosModules.impermanence
-            ];
-        };
-
-        vbox = nixos-generators.nixosGenerate {
-            system = "x86_64-linux";
-            format = "vbox";
-            specialArgs = { inherit
-                inputs
-                ;
-                hostname = "user";
-            };
-            modules = [
-                ./hosts/server-vm
-                disko.nixosModules.disko
-                impermanence.nixosModules.impermanence
-            ];
-        };
-    };
     };
 }
