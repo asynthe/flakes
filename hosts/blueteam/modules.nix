@@ -5,6 +5,7 @@
 	# Disko
 	../../modules/disko/ext4.nix
 
+        # Modules
 	./modules/boot.nix # Grub.
 	./modules/console.nix # Bigger font console.
 	./modules/pkgs.nix # Packages.
@@ -12,27 +13,28 @@
 	./modules/user.nix # Users.
 
 	# Desktop Environment
-	./modules/desktop/xfce.nix
-	#./modules/desktop/i3.nix # In progress.
-	#./modules/desktop/xmonad.nix # In progress.
+	../../modules/desktop/xfce.nix # XFCE
+	#../../modules/desktop/i3.nix # In progress.
+	#../../modules/desktop/xmonad.nix # In progress.
 
-	# Monitoring
-	#./modules/monitoring/elasticsearch.nix
-	#./modules/monitoring/grafana.nix
-	#./modules/monitoring/loki.nix
-	#./modules/monitoring/prometheus.nix
+	# systemd services
+	../../modules/systemd/xfce/random_wallpaper.nix
+	../../modules/systemd/xfce/screen_always_on.nix
 
-
+        # -----------------------------
 	# Security Tool Box
 	# https://fabaff.github.io/nix-security-box/
 
-	# Chosen modules
+	# Chosen from list
+
         ./modules/security/cloud.nix
         ./modules/security/forensics.nix
         ./modules/security/information-gathering.nix
         ./modules/security/network.nix
 
-        # Modules
+        # -----------------------------
+        # All Modules
+
         #./modules/security/1_all.nix # Full package set.
         #./modules/security/bluetooth.nix
         #./modules/security/code.nix
@@ -63,6 +65,13 @@
         #./modules/security/web.nix
         #./modules/security/windows.nix
         #./modules/security/wireless.nix
+        # -----------------------------
+
+	# Monitoring
+	#./modules/monitoring/elasticsearch.nix
+	#./modules/monitoring/grafana.nix
+	#./modules/monitoring/loki.nix
+	#./modules/monitoring/prometheus.nix
 
     ];
 }

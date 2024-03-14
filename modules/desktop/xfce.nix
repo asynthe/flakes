@@ -1,4 +1,4 @@
-{ config, pkgs, user, ... }: {
+{ config, pkgs, username, ... }: {
 
     services.xserver = {
         enable = true;	
@@ -11,7 +11,7 @@
 	    defaultSession = "xfce";
 	    autoLogin = {
 	        enable = true;
-	        user = "${user}";
+	        user = "${username}";
 	    };
 	};
     };

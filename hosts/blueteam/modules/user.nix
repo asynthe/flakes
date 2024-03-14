@@ -1,6 +1,6 @@
-{ config, user, ... }: {
+{ config, username, ... }: {
 
-    users.users."${user}" = {
+    users.users."${username}" = {
         isNormalUser = true;
         initialPassword = "password"; # SECRET
         extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.

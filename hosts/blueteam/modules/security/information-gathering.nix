@@ -7,7 +7,7 @@
     cloudbrute
     enumerepo
     holehe
-    maigret
+    #maigret
     metabigor
     p0f
     sn0int

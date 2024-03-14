@@ -4,8 +4,9 @@
 
     environment.systemPackages = builtins.attrValues {
         inherit (pkgs)
-	    curl
 	    git
+	    neovim
+	    wget curl
 	;
     };
 }
