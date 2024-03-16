@@ -17,6 +17,10 @@
 	#../../modules/desktop/i3.nix # In progress.
 	#../../modules/desktop/xmonad.nix # In progress.
 
+	# Security
+	../../modules/security/clamav.nix # Antivirus.
+
+
 	# systemd services
 	../../modules/systemd/xfce/random_wallpaper.nix
 	../../modules/systemd/xfce/screen_always_on.nix
