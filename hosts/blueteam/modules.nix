@@ -3,14 +3,16 @@
     imports = [
 
 	# Disko
-	../../modules/disko/ext4.nix
+        #../../modules/disko/ext4.nix # (boot, efi, ext4)
 
-        # Modules
-	./modules/boot.nix # Grub.
-	./modules/console.nix # Bigger font console.
+	# List of packages (besides Security Toolbox)
 	./modules/pkgs.nix # Packages.
-	./modules/system.nix # System configuration.
-	./modules/user.nix # Users.
+
+	# System modules
+	./modules/system/boot.nix # Grub.
+	./modules/system/console.nix # Bigger font console.
+	./modules/system/system.nix # System configuration.
+	./modules/system/user.nix # Users.
 
 	# Desktop Environment
 	../../modules/desktop/xfce.nix # XFCE
@@ -20,12 +22,17 @@
 	# Security
 	../../modules/security/clamav.nix # Antivirus.
 
+	# Monitoring
+	#./modules/monitoring/elasticsearch.nix
+	#./modules/monitoring/grafana.nix
+	#./modules/monitoring/loki.nix
+	#./modules/monitoring/prometheus.nix
 
 	# systemd services
 	../../modules/systemd/xfce/random_wallpaper.nix
 	../../modules/systemd/xfce/screen_always_on.nix
 
-        # -----------------------------
+        # -------------------------------------------------
 	# Security Tool Box
 	# https://fabaff.github.io/nix-security-box/
 
@@ -36,7 +43,6 @@
         ./modules/security/information-gathering.nix
         ./modules/security/network.nix
 
-        # -----------------------------
         # All Modules
 
         #./modules/security/1_all.nix # Full package set.
@@ -69,13 +75,6 @@
         #./modules/security/web.nix
         #./modules/security/windows.nix
         #./modules/security/wireless.nix
-        # -----------------------------
-
-	# Monitoring
-	#./modules/monitoring/elasticsearch.nix
-	#./modules/monitoring/grafana.nix
-	#./modules/monitoring/loki.nix
-	#./modules/monitoring/prometheus.nix
-
+        # -------------------------------------------------
     ];
 }

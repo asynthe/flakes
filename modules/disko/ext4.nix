@@ -1,8 +1,5 @@
-let
+{ device, ... }: {
 
-    device = "/dev/vda";
-
-in {
     disko.devices = {
 
         # Main disk
