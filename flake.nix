@@ -40,8 +40,8 @@
                 specialArgs = { inherit
                     inputs
                     ;
-                    hostname = "blueteam";
             	    username = "blue";
+                    hostname = "blueteam";
                     device = "/dev/vda";
                 };
                 modules = [
@@ -51,6 +51,9 @@
                 ];
 	    };
 
+	    # The next was given to me by ChatGPT
+	    # What is ChatGPT smoking?
+
 	    # QEMU (qcow2)
 	    blueteam-qemu = nixos-generators.lib.qemu {
 	        inherit nixpkgs;
@@ -58,16 +61,6 @@
 		diskSize = "10G";
 		firmware = "ovmf"; # UEFI firmware.
 	    };
-
-	    # Amazon EC2 Image
-	    #blueteam-ec2 = nixos-generators.lib.ec2 {
-	        #inherit nixpkgs;
-		#baseConfig = self.nixosConfigurations.blueteam;
-		#instanceType = "t2.micro"; # ADJUST
-		#region = "us-west-2"; # ADJUST
-		#diskSize = 10; # ADJUST
-		#sshPublicKey = "/path/to/public/key.pub" # ADJUST
-	    #};
 	};
 
 	# Blue Team - Images
@@ -76,7 +69,7 @@
 	    # Amazon EC2 Image (.ec2)
 	    blueteam-ec2 = nixos-generators.nixosGenerate {
                 system = "x86_64-linux";
-                format = "amazon"; # ?
+                format = "amazon";
                 specialArgs = { inherit
                     inputs
                     ;
@@ -94,7 +87,7 @@
 	    # Azure (.vhd)
 	    blueteam-azure = nixos-generators.nixosGenerate {
                 system = "x86_64-linux";
-                format = "azure"; # ?
+                format = "azure";
                 specialArgs = { inherit
                     inputs
                     ;
@@ -112,7 +105,7 @@
 	    # QEMU (.qcow2)
 	    blueteam-qemu = nixos-generators.nixosGenerate {
                 system = "x86_64-linux";
-                format = "qcow-efi"; # ?
+                format = "qcow-efi";
                 specialArgs = { inherit
                     inputs
                     ;
@@ -130,7 +123,7 @@
 	    # Virtualbox (.?)
 	    blueteam-vbox = nixos-generators.nixosGenerate {
                 system = "x86_64-linux";
-                format = "virtualbox"; # ?
+                format = "virtualbox";
                 specialArgs = { inherit
                     inputs
                     ;
