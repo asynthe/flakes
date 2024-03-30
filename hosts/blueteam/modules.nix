@@ -4,6 +4,7 @@
 
 	# Disko
         #../../modules/disko/ext4.nix # (boot, efi, ext4)
+        ../../modules/disko/ext4_impermanence.nix # (boot, efi, ext4)
 
 	# List of packages (besides Security Toolbox)
 	./modules/pkgs.nix # Packages.
@@ -17,7 +18,6 @@
 	# Desktop Environment
 	../../modules/desktop/xfce.nix # XFCE
 	#../../modules/desktop/i3.nix # In progress.
-	#../../modules/desktop/xmonad.nix # In progress.
 
 	# Security
 	../../modules/security/clamav.nix # Antivirus.
@@ -29,8 +29,8 @@
 	#./modules/monitoring/prometheus.nix
 
 	# systemd services
-	../../modules/systemd/xfce/random_wallpaper.nix
-	../../modules/systemd/xfce/screen_always_on.nix
+	../../modules/systemd/xfce_random_wallpaper.nix
+	../../modules/systemd/xfce_screen_always_on.nix
 
         # -------------------------------------------------
 	# Security Tool Box
@@ -38,10 +38,10 @@
 
 	# Chosen from list
 
-        ./modules/security/cloud.nix
-        ./modules/security/forensics.nix
-        ./modules/security/information-gathering.nix
-        ./modules/security/network.nix
+        #./modules/security/cloud.nix
+        #./modules/security/forensics.nix
+        #./modules/security/information-gathering.nix
+        #./modules/security/network.nix
 
         # All Modules
 
