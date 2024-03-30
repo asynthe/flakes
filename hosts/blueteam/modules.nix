@@ -3,14 +3,13 @@
     imports = [
 
 	# Disko
-        #../../modules/disko/ext4.nix # (boot, efi, ext4)
-        ../../modules/disko/ext4_impermanence.nix # (boot, efi, ext4)
+        #./modules/disko/ext4.nix # (boot, efi, ext4)
+        ./modules/disko/ext4_impermanence.nix # (boot, efi, ext4)
 
 	# List of packages (besides Security Toolbox)
 	./modules/pkgs.nix # Packages.
 
 	# System modules
-	./modules/system/boot.nix # Grub.
 	./modules/system/console.nix # Bigger font console.
 	./modules/system/system.nix # System configuration.
 	./modules/system/user.nix # Users.

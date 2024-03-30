@@ -27,8 +27,8 @@
 			content = {
 			    type = "filesystem";
 			    format = "vfat";
-			    mount = "/boot";
-			};
+			    mountpoint = "/boot";
+		        };
 		    };
 
 		    data = {
@@ -80,4 +80,16 @@
       # rollback results in sudo lectures after each reboot
       Defaults lecture = never
     '';
+    
+    # BOOT (boot.nix)
+    boot.loader.efi.canTouchEfiVariables = true;
+    boot.loader.timeout = 5;
+    boot.loader.systemd-boot = {
+        enable = true;
+	configurationLimit = 5;
+    };
+    #boot.loader.grub = {
+        #efiSupport = true;
+	#efiInstallAsRemovable = true;
+    #};
 }
