@@ -2,31 +2,26 @@
 
     imports = [
 
-        #./modules/disko/ext4.nix
-        ./modules/disko/btrfs_impermanence.nix
+        #../../modules/disko/ext4.nix
+        ../../modules/disko/btrfs_impermanence.nix
 
-	# List of packages (besides Security Toolbox)
-	./modules/pkgs.nix # Packages.
+	../../modules/pkgs.nix
 
-	# System modules
-	./modules/system/console.nix # Bigger font console.
-	./modules/system/system.nix # System configuration.
-	./modules/system/user.nix # Users.
+	../../modules/system/console.nix # Bigger font console
+	../../modules/system/system.nix # System configuration
+	../../modules/system/user.nix # Users
 
-	# Desktop Environment
 	../../modules/desktop/xfce.nix # XFCE
-	#../../modules/desktop/i3.nix # In progress.
+	#../../modules/desktop/i3.nix # In progress
 
-	# Security
-	../../modules/security/clamav.nix # Antivirus.
+	../../modules/security/clamav.nix # Antivirus
 
-	# Monitoring
-	#./modules/monitoring/elasticsearch.nix
-	#./modules/monitoring/grafana.nix
-	#./modules/monitoring/loki.nix
-	#./modules/monitoring/prometheus.nix
+	#../../modules/monitoring/elasticsearch.nix
+	#../../modules/monitoring/grafana.nix
+	#../../modules/monitoring/loki.nix
+	#../../modules/monitoring/prometheus.nix
 
-	# systemd services
+	# systemd services + timers
 	../../modules/systemd/xfce_random_wallpaper.nix
 	../../modules/systemd/xfce_screen_always_on.nix
 

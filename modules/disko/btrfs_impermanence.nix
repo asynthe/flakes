@@ -34,10 +34,6 @@
 			content.type = "btrfs";
 			content.subvolumes = {
 
-			    home.type = "filesystem";
-			    home.mountpoint = "/home";
-			    home.mountOptions = [ "compress=zstd" ];
-
 			    nix.type = "filesystem";
 			    nix.mountpoint = "/nix";
 			    nix.mountOptions = [ "compress=zstd" ];
@@ -45,10 +41,6 @@
 			    persist.type = "filesystem";
 			    persist.mountpoint = "/persist";
 			    persist.mountOptions = [ "compress=zstd" ];
-
-			    shared.type = "filesystem";
-			    shared.mountpoint = "/shared";
-			    shared.mountOptions = [ "compress=zstd" ];
 
 			    log.type = "filesystem";
 			    log.mountpoint = "/var/log";
