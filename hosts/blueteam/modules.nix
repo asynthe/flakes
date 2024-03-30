@@ -3,8 +3,8 @@
     imports = [
 
 	# Disko
-        #./modules/disko/ext4.nix # (boot, efi, ext4)
-        ./modules/disko/ext4_impermanence.nix # (boot, efi, ext4)
+        #./modules/disko/ext4.nix
+        ./modules/disko/btrfs_impermanence.nix
 
 	# List of packages (besides Security Toolbox)
 	./modules/pkgs.nix # Packages.
