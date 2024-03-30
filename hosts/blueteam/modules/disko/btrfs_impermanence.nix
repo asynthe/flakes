@@ -1,6 +1,5 @@
 { lib, device, inputs, ... }: {
 
-    # DISKO
     disko.devices = {
 	nodev."/" = {
 	    fsType = "tmpfs";
@@ -25,11 +24,9 @@
 		        name = "boot";
 		        size = "512M";
 		        type = "EF00";
-			content = {
-			    type = "filesystem";
-			    format = "vfat";
-			    mountpoint = "/boot";
-		        };
+			content.type = "filesystem";
+			content.format = "vfat";
+			content.mountpoint = "/boot";
 		    };
 
 		    data = {
@@ -47,15 +44,15 @@
 
 			    persist.type = "filesystem";
 			    persist.mountpoint = "/persist";
-			    persist.mountOptions = [ "compres=zstd" ];
+			    persist.mountOptions = [ "compress=zstd" ];
 
 			    shared.type = "filesystem";
 			    shared.mountpoint = "/shared";
-			    shared.mountOptions = [ "compres=zstd" ];
+			    shared.mountOptions = [ "compress=zstd" ];
 
 			    log.type = "filesystem";
 			    log.mountpoint = "/var/log";
-			    log.mountOptions = [ "compres=zstd" ];
+			    log.mountOptions = [ "compress=zstd" ];
 			};
 		    };
                 };
@@ -63,7 +60,6 @@
         };
     };
 
-    # FILESYSTEMS
     fileSystems = {
         "/persist".neededForBoot = true;
         "/var/log".neededForBoot = true;
@@ -90,8 +86,4 @@
         enable = true;
 	configurationLimit = 5;
     };
-    #boot.loader.grub = {
-        #efiSupport = true;
-	#efiInstallAsRemovable = true;
-    #};
 }

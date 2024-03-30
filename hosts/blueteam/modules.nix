@@ -2,7 +2,6 @@
 
     imports = [
 
-	# Disko
         #./modules/disko/ext4.nix
         ./modules/disko/btrfs_impermanence.nix
 
