@@ -1,5 +1,6 @@
 { lib, device, inputs, ... }: {
 
+    # DISKO
     disko.devices = {
 	nodev."/" = {
 	    fsType = "tmpfs";
@@ -62,6 +63,7 @@
         };
     };
 
+    # FILESYSTEMS
     fileSystems = {
         "/persist".neededForBoot = true;
         "/var/log".neededForBoot = true;
