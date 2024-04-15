@@ -1,4 +1,4 @@
-{ lib, device, inputs, ... }: {
+{ device, ... }: {
 
     disko.devices = {
 	nodev."/" = {
