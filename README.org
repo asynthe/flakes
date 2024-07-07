@@ -1,3 +1,5 @@
+** NOTICE: THIS REPO IS ON-HOLD FOR NOW WHILE I DO OTHER STUFF
+
 ** Resources
 > [[https://discourse.nixos.org/t/proper-way-to-build-a-remote-system-with-flakes/17661][Proper way to build a remote system with flakes - discourse.nixos.org]]
 > [[https://github.com/nix-community/awesome-nix][Awesome Nix - github]]
