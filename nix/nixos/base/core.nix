@@ -1,5 +1,3 @@
-# Imported by every machine: nix daemon settings, locale. Accounts come from the
-# `auth` aspect.
 { ... }:
 {
     flake.modules.nixos.core = { ... }: {
@@ -15,9 +13,7 @@
         programs.zsh.enable = true;
 
         security.sudo.extraConfig = ''
-            # Ask for password every 2 hours
             Defaults timestamp_timeout=120
-            # rollback results in sudo lectures after each reboot
             Defaults lecture = never
         '';
     };

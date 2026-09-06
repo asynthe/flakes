@@ -1,6 +1,3 @@
-# Every host that imports the `deploy` aspect becomes a deploy-rs node.
-# The target address and ssh user are the host's own to state, so they live in
-# `sys.deploy.*` rather than being repeated here.
 { config, lib, inputs, ... }:
 let
     deployable = lib.filterAttrs

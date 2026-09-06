@@ -9,8 +9,6 @@
         boot.loader.timeout                          = 3;
     };
 
-    # Legacy BIOS/CSM. The host still has to name a target disk in
-    # `boot.loader.grub.devices`, which is a fact about its hardware.
     flake.modules.nixos.boot-bios = { ... }: {
         boot.loader.grub.enable             = true;
         boot.loader.grub.efiSupport         = false;

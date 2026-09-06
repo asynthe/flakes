@@ -1,5 +1,3 @@
-# What every machine in this repo is before it is anything in particular.
-# A host imports this and then names only what it actually serves.
 { config, ... }:
 {
     flake.modules.nixos.profile-server = {

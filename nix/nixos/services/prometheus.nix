@@ -1,5 +1,3 @@
-# Split in two: every machine runs `node-exporter`, one machine runs `prometheus`
-# and scrapes the rest over the tailnet.
 { ... }:
 {
     flake.modules.nixos.node-exporter = { config, lib, ... }: {
@@ -14,8 +12,6 @@
             '';
         };
 
-        # The smartctl exporter holds CAP_SYS_RAWIO, so drive health needs no
-        # interactive sudo.
         config = {
             services.prometheus.exporters.node = {
                 enable            = true;
@@ -23,7 +19,6 @@
                 enabledCollectors = [ "systemd" ];
             };
 
-            # No `devices` list: it autodiscovers, so a disk swap needs no rebuild.
             services.prometheus.exporters.smartctl = {
                 enable        = true;
                 listenAddress = config.sys.exporters.bind;
@@ -92,7 +87,6 @@
                         }];
                     }
                     {
-                        # Drive health: hours, reallocated sectors, temperature.
                         job_name = "smartctl";
                         static_configs = [{ targets = [ "127.0.0.1:${toString smart.port}" ]; }];
                     }

@@ -1,8 +1,35 @@
 # flakes
 
-Every machine I run except the laptop, which lives in [`dots`](https://github.com/asynthe/dots).
-Same [dendritic pattern]: every `.nix` file under `nix/` is a flake-parts module,
-auto-imported by [`import-tree`], and nothing is imported by hand.
+Every machine I run except the laptop, which stays in [`dots`](https://github.com/asynthe/dots)
+along with all the dotfiles. Right now that is one host, `sarten`, an HP ProLiant
+ML350e Gen8 v2 sitting in the house; the repo is shaped for the ones after it.
+
+The code here carries no explanatory comments. `# TODO` is the only comment
+convention, so anything you need to know about *why* something is written the
+way it is lives in this file or in [docs/](#docs).
+
+## The pattern
+
+This is the [dendritic pattern]. Every `.nix` file under `nix/` is a flake-parts
+module, and [`import-tree`] walks the directory and imports all of them, so there
+is no `imports = [ ... ]` list to keep in sync anywhere. Adding a file is the
+whole act of adding it to the build.
+
+Each of those files writes into `flake.modules.nixos.<name>`. That registry is
+the only structure in the repo — a named NixOS module sitting in an attrset is
+what this README calls an *aspect*. A host is then nothing more than a list of
+names pulled back out of the registry, and `nix/flake/hosts.nix` turns every
+aspect whose name starts with `host-` into a `nixosConfiguration`. Declaring one
+is the entire registration; nothing central needs editing.
+
+Two consequences are worth stating outright. There are **no `enable` options**:
+a machine turns a feature on by importing its aspect, which makes the import list
+in `nix/hosts/<name>/default.nix` the complete and honest answer to "what is this
+machine?". And **options exist only for values that genuinely differ between
+machines** — a bind address, a media directory, a deploy target. If every machine
+would set the same value, it belongs in the aspect, not in an option.
+
+## Layout
 
 ```
 flake.nix                  the only entry point: mkFlake (import-tree ./nix)
@@ -20,32 +47,113 @@ nix/
     profiles/              role bundles; a host names one instead of thirty aspects
     services/              one file per service
   hosts/
-    sarten/                HP ProLiant ML350e Gen8 v2
+    sarten/                the ProLiant
 secrets/                   sops-encrypted, see .sops.yaml
 assets/                    wallpapers the homepage dashboard inlines
+docs/                      the runbooks
 ```
 
-## The mental model
+`profiles/` is the layer that makes more than one machine bearable. `profile-server`
+bundles the dozen aspects every box wants — core, cli, auth, networking, ssh,
+sops, deploy, tailscale, git, neovim, nh, the node exporter, smartd — so a host
+file names that and then only what it actually serves. Sarten's list is thirteen
+entries instead of thirty-five.
 
-1. Every file under `nix/` is a flake-parts module, auto-imported.
-2. Each writes into `flake.modules.nixos.<name>` — the registry. An *aspect* is
-   just a named NixOS module sitting in an attrset.
-3. A host is a list of names pulled back out of that registry.
+## Accounts
 
-**No `enable` options.** A host turns a feature on by importing its aspect, so
-the import list in `nix/hosts/<name>/default.nix` is the complete, honest answer
-to "what is this machine?". Options exist only for values that differ between
-machines.
+`auth.nix` at the repo root is the entire user list, and it is shared by every
+machine. It is plain data rather than a module: it sits outside `nix/` precisely
+so import-tree ignores it, and `nix/nixos/base/auth.nix` is the aspect that reads
+it and turns it into accounts. Nothing else in the repo declares a user.
+
+```nix
+{
+    asynthe = {
+        admin       = true;
+        passwordKey = "users/meow";
+        keys = [
+            "ssh-ed25519 AAAA... p1"
+            "ssh-ed25519 AAAA... s24"
+        ];
+    };
+
+    kazu = {
+        admin       = true;
+        passwordKey = null;
+        keys = [ ];
+    };
+}
+```
+
+Three fields, all optional. `admin` puts the account in `wheel` and makes it a
+nix daemon trusted-user, which together amount to root on the machine — it
+defaults to `false`. `keys` is the list of ssh public keys, defaulting to empty;
+an account with no keys is created but cannot log in at all. `passwordKey` names
+where that user's login hash lives inside `secrets/secrets.yaml` and defaults to
+`users/<name>`, so most entries never mention it.
+
+Admins get every service group an aspect hands out — `media`, `jellyfin`,
+`docker`, `incus-admin`, `hermes` — automatically. That is why no aspect anywhere
+names a user: they all add their group to `sys.admins`, which `auth.nix`
+populates. Add a second admin and they can drop files into the media library
+without anyone editing a service file.
+
+Ssh follows the same idea. Password authentication is derived, not configured:
+the `ssh` aspect turns it off as soon as any admin has a key, so **the first key
+added to `auth.nix` is what closes the door**, not a setting someone has to
+remember. Root login is off unconditionally.
+
+### Adding a user
+
+Write the entry, add the password hash to sops, deploy. The hash is the only
+part that is not in git:
+
+```bash
+mkpasswd -m yescrypt          # paste the output into the editor below
+sops secrets/secrets.yaml     # add it under `users:` as <name>: <hash>
+```
+
+Then set `passwordKey` to `"users/<name>"` and add their public keys. RSA keys
+are fine alongside ed25519 ones — any current client signs with `rsa-sha2-256`
+or `-512`, which OpenSSH still accepts; only the old SHA-1 `ssh-rsa` signature
+algorithm is disabled, and that is a client-side detail.
+
+The one trap: the password hash is `neededForUsers`, which means sops decrypts it
+early, before `/home` is necessarily mounted, so a `passwordKey` naming an entry
+that does not exist in `secrets.yaml` fails the *entire* activation rather than
+just that account. This is why an account whose hash is not ready yet should be
+written as `passwordKey = null`, which locks the password instead: key-only ssh
+keeps working and `sudo` does not.
+
+Removing a user is the same file, in reverse — and it is a real removal.
+`users.mutableUsers = true` does not protect an account that this flake declared
+before and no longer does; `update-users-groups.pl` deletes it on the next
+switch and leaves an orphaned `/home/<name>` behind. Move the home directory
+first if there is anything in it.
+
+## Secrets
+
+One sops file, `secrets/secrets.yaml`, decrypted on each machine with the age
+identity at `sys.sops.ageKeyFile`, which defaults to `/var/lib/sops/age-keys.txt`.
+That file has to exist *before* the first activation — `nixos-anywhere --extra-files`
+puts it there on a fresh install, and it is a manual `scp` on a box adopted in
+place.
+
+Every machine currently shares one age identity. To give a host its own instead,
+convert its ssh host key and add it alongside the admin key; the recipe is in the
+comment at the top of `.sops.yaml`. A host holding only its own key cannot read
+another machine's secrets, which is the point.
 
 ## Adding a machine
 
+Generate the hardware config on the box and wrap it in an aspect:
+
 ```bash
 mkdir nix/hosts/<name>
-nixos-generate-config --show-hardware-config > /tmp/hw.nix   # on the box
+nixos-generate-config --show-hardware-config > /tmp/hw.nix
 ```
 
-Wrap that in `flake.modules.nixos.<name>-hardware`, then write
-`nix/hosts/<name>/default.nix` declaring `flake.modules.nixos.host-<name>`:
+Then write `nix/hosts/<name>/default.nix` declaring `flake.modules.nixos.host-<name>`:
 
 ```nix
 imports = with config.flake.modules.nixos; [
@@ -59,11 +167,10 @@ system.stateVersion = "26.05";
 sys.deploy.hostname = "<ip or tailnet name>";
 ```
 
-Accounts come from `auth.nix`, so there are none to declare here.
-
-That is the whole registration — `nix/flake/hosts.nix` picks it up by its
-`host-` prefix, and `profile-server` brought in `deploy`, so it is a deploy-rs
-node too.
+That is all of it. `nix/flake/hosts.nix` picks the aspect up by its `host-`
+prefix, and because `profile-server` pulls in `deploy`, the machine is a
+deploy-rs node too. Accounts come from `auth.nix`, so there are none to declare.
+Nix only sees files that are `git add`ed, which catches everyone once.
 
 ## Rebuilding
 
@@ -73,66 +180,79 @@ nixos-rebuild switch --flake .#sarten          # on the machine itself
 nix flake check                                # builds every host
 ```
 
+`nix flake check` is worth running before a deploy: `nix/flake/checks.nix` adds
+every host's `system.build.toplevel` as a check, so a machine you are not
+currently touching still has to build.
+
 ## Deploying
 
-`nix develop` first, or install deploy-rs. Builds happen locally and the closure
-is pushed, which is usually faster than building on the target.
+`nix develop` puts deploy-rs, sops, age and ssh-to-age on `$PATH`.
 
 ```bash
-deploy .#sarten            # build, push, activate, verify reachability
+deploy .#sarten                 # build, push, activate, verify reachability
 deploy .#sarten --dry-activate
-deploy                     # every node
-deploy .#sarten -- --show-trace
+deploy                          # every node
 ```
 
-Two safety nets are on by default: `autoRollback` reverts a failed activation,
-and `magicRollback` reverts if the deployer cannot reach the machine afterwards
-— which is what saves a box from a bad firewall or network change. Set
-`sys.deploy.magicRollback = false` only for a machine you can physically reach.
+Nodes are derived rather than listed. `nix/flake/deploy.nix` walks
+`nixosConfigurations` and builds a node for every host whose config has
+`sys.deploy.enabled`, which the `deploy` aspect sets when a machine imports it.
+The target address and ssh user are facts about the machine, so they live in that
+machine's `sys.deploy.*` rather than in a central table — adding a host needs no
+edit to the deploy glue at all.
 
-Deploy-rs ssh's in as `sys.deploy.sshUser` (default: the first admin in
-`auth.nix`) and sudos to root. The `deploy` aspect grants that one account
-passwordless sudo, because a password prompt mid-deploy hangs rather than fails.
+Builds happen locally and the closure is pushed, because the workstation is
+almost always the faster box; set `sys.deploy.remoteBuild = true` for a host
+where that is not true. Deploy-rs ssh's in as `sys.deploy.sshUser`, defaulting to
+the first admin in `auth.nix`, and sudos to root to activate. The `deploy` aspect
+grants exactly that one account passwordless sudo, because deploy-rs cannot
+answer a password prompt — it hangs on one until the timeout rather than failing.
 
-## Accounts
+Two rollbacks are on by default. `autoRollback` reverts an activation that fails
+outright. `magicRollback` reverts when the deployer cannot reach the machine
+*after* activation, which is the net that catches a bad firewall rule or a
+network change, and is worth keeping on for anything you cannot walk over to.
 
-`auth.nix` at the repo root is the whole user list, shared by every machine. It
-is plain data, not a module -- it sits outside `nix/` so import-tree leaves it
-alone, and `nix/nixos/base/auth.nix` turns it into accounts.
+## Choices worth knowing
 
-```nix
-kazu = {
-    admin       = true;                 # wheel, and a nix daemon trusted-user
-    passwordKey = "users/kazu";         # where the hash lives in secrets.yaml
-    keys        = [ "ssh-rsa AAAA..." ];
-};
-```
+**Inputs.** `hermes-agent` deliberately does not `follows` nixpkgs: its Python
+closure is built with uv2nix against the nixpkgs it pins, and overriding that is
+how the build breaks. `disko` is an input nothing uses yet, kept because the next
+machine will be installed rather than adopted. There is no impermanence anywhere
+in this repo — no `/persist`, no `environment.persistence` — which is the main way
+these aspects differ from their ancestors in `dots`.
 
-Every field has a default, so an entry can be just a `keys` list. An account
-with no keys cannot log in at all; `passwordKey = null` locks the password
-instead, which leaves key-only ssh working and `sudo` not. Admins are added to
-every service group an aspect hands out -- `media`, `jellyfin`, `docker`,
-`incus-admin`, `hermes` -- so there is no per-user wiring anywhere else.
+**Boot.** `boot-bios` enables GRUB but names no target disk, and `boot-uefi`
+assumes the ESP is at `/boot`. Which disk GRUB installs to is a fact about the
+hardware, so it belongs in the host's own `filesystems.nix`; an empty
+`boot.loader.grub.devices` installs no bootloader at all and is a silent way to
+end up with an unbootable machine.
 
-Adding a password is the one step that touches sops:
+**Monitoring.** `node-exporter` and `prometheus` are separate aspects on purpose:
+every machine runs the exporters, one machine runs the server and scrapes the
+rest through `sys.prometheus.extraTargets`. The exporters bind to loopback by
+default; a machine being scraped remotely sets `sys.exporters.bind = "0.0.0.0"`,
+which the tailnet firewall already fences off from the LAN. The smartctl exporter
+holds `CAP_SYS_RAWIO`, so drive health needs no interactive sudo.
 
-```bash
-mkpasswd -m yescrypt         # paste the hash under `users:`
-sops secrets/secrets.yaml
-```
+**Grafana** generates its `secret_key` on the machine into `/var/lib/grafana`
+rather than holding it in sops — 26.05 refuses to start without one, and it never
+leaves the box. Point `sys.grafana.secretKeyFile` at a sops path if that ever
+stops being true.
 
-A `passwordKey` naming an entry that does not exist fails the entire
-activation, not just that account -- the hash is `neededForUsers`.
+**Docker** picks its storage driver from the root filesystem type. Hardcoding
+`btrfs`, which is what the laptop wants, makes dockerd refuse to start on
+sarten's ext4 root.
 
-## Secrets
+**qBittorrent** has its `serverConfig` rewritten on every start, so the save
+path, torrent port and web UI address are changed in the aspect and never in the
+web UI. That UI has no password because it is firewalled down to ssh reach and
+the arrs need its API.
 
-One sops file, `secrets/secrets.yaml`, decrypted on each machine with the age
-identity at `sys.sops.ageKeyFile` (`/var/lib/sops/age-keys.txt`). That file has
-to exist *before* the first activation — `nixos-anywhere --extra-files` puts it
-there on a fresh install, and it is a manual copy on an adopted box.
-
-To give a machine its own key instead of sharing the admin one, see the comment
-at the top of `.sops.yaml`.
+**The homepage dashboard** inlines its wallpapers as base64 data URIs, downscaled
+at build time. Homepage's `settings.yaml` holds exactly one background image, so
+rotation is client-side JavaScript over the inlined set, and the assets have to
+be inlined at all because the store is read-only.
 
 ## Docs
 

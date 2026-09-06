@@ -1,4 +1,3 @@
-# Scanned on the box: no Smart Array on this ML350e, both drives are onboard AHCI.
 { ... }:
 {
     flake.modules.nixos.sarten-hardware = { config, lib, modulesPath, ... }: {
@@ -9,7 +8,7 @@
             "ehci_pci" "uhci_hcd" "usb_storage" "usbhid"
         ];
         boot.initrd.kernelModules = [ ];
-        boot.kernelModules = [ "kvm-intel" ];   # 2x Xeon E5-2407
+        boot.kernelModules = [ "kvm-intel" ];
         boot.extraModulePackages = [ ];
 
         nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";

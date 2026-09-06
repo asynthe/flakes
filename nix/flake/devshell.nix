@@ -1,4 +1,3 @@
-# `nix develop` -- the tools that drive this repo but belong on no machine.
 { inputs, ... }:
 {
     perSystem = { pkgs, system, ... }: {

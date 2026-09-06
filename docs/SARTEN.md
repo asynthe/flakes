@@ -24,20 +24,38 @@ The host is three files, and only `default.nix` is meant to be edited often:
 
 ## Disk layout
 
-Legacy BIOS, two disks, no encryption. `sda` is as the installer left it; `sdb`
-was wiped by hand and holds nothing but the media library.
+Legacy BIOS, no encryption. `sda` is as the installer left it and carries the
+whole operating system; the data lives on a ZFS mirror that the root disk stays
+out of.
 
-| device | label | size | contents |
-| --- | --- | --- | --- |
-| `sda1` | `root` | 457G | ext4, mounted at `/` — `/boot` is a directory inside it, not a partition |
-| `sda2` | `swap` | 8.8G | swap partition |
-| `sdb1` | `media` | 466G | ext4, mounted at `/srv/media` — Jellyfin's library |
+| device | label | contents |
+| --- | --- | --- |
+| `sda1` | `root` | ext4, mounted at `/` — `/boot` is a directory inside it, not a partition |
+| `sda2` | `swap` | swap partition |
 
 Everything is addressed by label, and GRUB's target disk by `by-id`, because
-`/dev/sd*` is probe order: the two drives are the same model and can swap.
+`/dev/sd*` is probe order: drives of the same model can swap between reboots.
 
-`/srv/media` mounts `nofail`. A media disk that fails to appear must not hold up
-boot on a machine with no console attached.
+### `tank`
+
+A hand-made two-disk mirror over the 2 TB pair, imported through
+`boot.zfs.extraPools`. Three datasets: `tank/media` at `/srv/media` is
+Jellyfin's library, `tank/wazuh` at `/srv/wazuh` holds the compose checkout,
+its certs and its container volumes, and `tank/incus` is created by Incus
+itself, which is why `filesystems.nix` never mentions it.
+
+Both mounted datasets are `mountpoint=legacy` so systemd owns the mount rather
+than ZFS, and both mount `nofail` — a data disk that fails to appear must not
+hold up boot on a machine with no console attached.
+
+`boot.zfs.forceImportRoot` is **off**. Root is ext4, so ZFS is never in the boot
+path here, and forcing an import past another machine's claim on the pool has no
+upside and one very bad failure mode. `networking.hostId` is set from
+`/etc/machine-id`; ZFS refuses to import a pool without one, so removing that
+line leaves the datasets unmounted and Jellyfin staring at an empty directory.
+
+A weekly scrub is enabled. It is the only thing that walks the blocks nothing
+reads, which is exactly where rot hides.
 
 Three deliberate differences from `p1`:
 
@@ -49,10 +67,9 @@ for a media and agent host on a home LAN.
 
 **No impermanence.** The rollback is only as good as what `/persist` captures,
 and debugging a missing persist entry on a remote box means losing the state
-that would have told you what went wrong. Every aspect still declares its
-`environment.persistence` entries; they are `mkIf`-guarded off, so the host wipes
-`environment.persistence` with `mkForce` to stop the module warning about uid
-stability it cannot verify.
+that would have told you what went wrong. This repo has no impermanence in it at
+all — the aspects here were rewritten without it, so unlike in `dots` there is
+nothing for the host to switch off.
 
 **GRUB, not systemd-boot.** The `boot` aspect is systemd-boot, which is UEFI
 only. `sarten` imports `boot-bios` instead — never both. `boot-bios` turns GRUB
@@ -65,12 +82,12 @@ all, so that line is load-bearing.
 Static, on `eno1`, at `192.168.1.135/24` via `192.168.1.1`. The box has six
 ethernet ports and one cable.
 
-The `network` aspect is written for the laptop: it disables NetworkManager and
-drives `iwd` instead. This machine has no wireless hardware whatsoever, so
-importing that aspect unchanged would leave it with nothing able to configure an
-address — a guaranteed lockout on the first switch. `default.nix` therefore
-forces `iwd` off and declares the address by hand. Scripted networking brings it
-up through `network-addresses-eno1.service`; no DHCP client is involved.
+The `net-base` aspect in this repo is server-shaped and drives no wireless
+backend at all, so the address is simply declared by hand in `default.nix`.
+Scripted networking brings it up through `network-addresses-eno1.service`; no
+DHCP client is involved. The equivalent aspect in `dots` is laptop-shaped and
+drives `iwd`, which on a box with no wireless hardware is a guaranteed lockout —
+that is one of the reasons these machines no longer share a repo.
 
 If the address ever has to change, change it *and* reboot with a console
 available. There is no second way in over the LAN.

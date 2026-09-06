@@ -1,5 +1,3 @@
-# The shell environment every machine gets, so it has to be defensible headless.
-# Subsystem tools live with their subsystem instead.
 { ... }:
 {
     flake.modules.nixos.cli = { pkgs, ... }: {
@@ -13,7 +11,7 @@
             ffmpeg-full ffmpegthumbnailer
             file
             fzf skim
-            ghostty.terminfo   # ssh from a ghostty client needs this end too
+            ghostty.terminfo
             htop btop
             hyperfine
             imagemagickBig

@@ -1,4 +1,3 @@
-# The *arr stack plus the by-director symlink tree Jellyfin scans. See docs/MEDIA.md.
 { ... }:
 {
     flake.modules.nixos.arr = { config, lib, pkgs, ... }: {
@@ -55,11 +54,9 @@
         config = let
             cfg = config.sys.arr;
 
-            # Radarr keeps `movies` flat; `library` is generated and is what Jellyfin scans.
             movies  = "${cfg.mediaDir}/movies";
             library = "${cfg.mediaDir}/library/movies";
 
-            # Radarr stores no crew, so the tree is driven by `dir-<name>` tags.
             sync = pkgs.writers.writePython3Bin "arr-library-sync" {
                 flakeIgnore = [ "E501" ];
             } ''
@@ -74,7 +71,6 @@
                 prefix = os.environ["TAG_PREFIX"].lower()
                 names = json.loads(os.environ["DIRECTOR_NAMES"])
 
-                # Radarr writes its api key into config.xml on first start; absent before that.
                 try:
                     key = ElementTree.parse(os.environ["RADARR_CONFIG"]).getroot().findtext("ApiKey")
                 except (OSError, ElementTree.ParseError):
@@ -82,16 +78,13 @@
                 if not key:
                     raise SystemExit("no ApiKey in radarr's config.xml yet")
 
-
                 def api(path):
                     req = urllib.request.Request(url + "/api/v3/" + path, headers={"X-Api-Key": key})
                     with urllib.request.urlopen(req, timeout=30) as resp:
                         return json.load(resp)
 
-
                 def display(slug):
                     return names.get(slug) or " ".join(w.capitalize() for w in slug.split("-"))
-
 
                 tags = {t["id"]: t["label"].lower() for t in api("tag")}
 
@@ -109,7 +102,6 @@
                     if not directors:
                         want[os.path.join("General", folder)] = target
 
-                # Reconciled, not rebuilt: a churning tree makes Jellyfin rescan every run.
                 have = {}
                 for root, subdirs, files in os.walk(tree):
                     for entry in subdirs + files:
@@ -128,7 +120,6 @@
                     os.makedirs(os.path.dirname(link), exist_ok=True)
                     os.symlink(target, link)
 
-                # A retagged movie leaves its old Directors/<name> behind; tmpfiles owns the buckets.
                 for root, subdirs, files in os.walk(tree, topdown=False):
                     if os.path.relpath(root, tree).count(os.sep) < 1:
                         continue
@@ -137,7 +128,6 @@
             '';
         in {
             # ─────────────── Services ───────────────
-            # `group` is overridden, not `user`: separate uids and state, shared library access.
             services.radarr = {
                 enable       = true;
                 group        = cfg.group;
@@ -159,14 +149,12 @@
                 settings.server.bindaddress = cfg.bind;
             };
 
-            # Talks to trackers, never the library, so it keeps DynamicUser.
             services.prowlarr = {
                 enable       = true;
                 openFirewall = cfg.openFirewall;
                 settings.server.bindaddress = cfg.bind;
             };
 
-            # Needs the group to write subtitles; has no bind option, it reads its own config.ini.
             services.bazarr = {
                 enable       = true;
                 group        = cfg.group;
@@ -178,7 +166,6 @@
             users.users = lib.genAttrs config.sys.admins
                 (_: { extraGroups = [ cfg.group ]; });
 
-            # Setgid keeps files in the group whoever writes them; the media root is jellyfin's.
             systemd.tmpfiles.rules = map (d: "d ${d} 2775 root ${cfg.group} - -") [
                 movies
                 "${cfg.mediaDir}/series"
@@ -192,7 +179,6 @@
 
             # ─────────────── Symlink tree ───────────────
             systemd.services = {
-                # The modules hardcode 0022, which would strip group write from imports.
                 radarr.serviceConfig.UMask = lib.mkForce "0002";
                 sonarr.serviceConfig.UMask = lib.mkForce "0002";
                 lidarr.serviceConfig.UMask = lib.mkForce "0002";
@@ -211,7 +197,6 @@
                     };
 
                     environment = {
-                        # Loopback whatever `bind` says: a wildcard is not a valid host.
                         RADARR_URL     = "http://127.0.0.1:${toString config.services.radarr.settings.server.port}";
                         RADARR_CONFIG  = "${config.services.radarr.dataDir}/config.xml";
                         LIBRARY_DIR    = library;
@@ -221,7 +206,6 @@
                 };
             };
 
-            # The path unit catches imports; the timer catches tags, which touch no file.
             systemd.paths.arr-library = {
                 wantedBy = [ "multi-user.target" ];
                 pathConfig.PathModified = movies;

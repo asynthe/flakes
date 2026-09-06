@@ -1,5 +1,3 @@
-# The only options declared outside an aspect: values that genuinely differ
-# between machines, plus the deploy target every host has to state for itself.
 { ... }:
 {
     flake.modules.nixos.core = { config, lib, ... }: {
@@ -11,8 +9,6 @@
             };
 
             deploy = {
-                # Set by the `deploy` aspect. A host that never imported it is
-                # skipped by nix/flake/deploy.nix instead of failing to evaluate.
                 enabled = lib.mkOption {
                     type        = lib.types.bool;
                     default     = false;

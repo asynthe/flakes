@@ -1,5 +1,3 @@
-# Server-shaped networking: no wireless backend, no MAC randomisation. A machine
-# with wifi wants its own aspect alongside this one.
 { ... }:
 {
     flake.modules.nixos.net-base = { ... }: {

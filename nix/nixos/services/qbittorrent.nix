@@ -1,5 +1,3 @@
-# Headless qbittorrent-nox behind the `arr` aspect. `downloadDir` must stay under
-# the media root or hardlink imports become copies. See docs/MEDIA.md.
 { ... }:
 {
     flake.modules.nixos.qbittorrent = { config, lib, pkgs, ... }: {
@@ -56,7 +54,6 @@
 
             profile = config.services.qbittorrent.profileDir;
 
-            # One category per arr, seeded once with `C` because the UI rewrites this file.
             categories = {
                 radarr         = { save_path = "${cfg.downloadDir}/movies"; };
                 sonarr         = { save_path = "${cfg.downloadDir}/series"; };
@@ -72,9 +69,8 @@
                 group          = cfg.group;
                 webuiPort      = cfg.webuiPort;
                 torrentingPort = cfg.torrentPort;
-                openFirewall   = false;   # handled below, per port
+                openFirewall   = false;
 
-                # Rewritten on every start: change these four here, not in the web UI.
                 serverConfig = {
                     LegalNotice.Accepted = true;
 
@@ -87,7 +83,6 @@
                         Address = cfg.bind;
                         Port    = cfg.webuiPort;
 
-                        # No password: the UI is firewalled to ssh reach only, and the arrs need the API.
                         LocalHostAuth = false;
                     };
                 };
@@ -95,7 +90,6 @@
 
             users.groups.${cfg.group} = { };
 
-            # 0002 so the arrs can hardlink out and clean up once seeding stops.
             systemd.services.qbittorrent.serviceConfig.UMask = "0002";
 
             systemd.tmpfiles.rules =
@@ -107,7 +101,6 @@
                     "${cfg.downloadDir}/music"
                 ];
 
-            # Merged into the module's tmpfiles key so it is ordered after its `d` lines.
             systemd.tmpfiles.settings.qbittorrent."${profile}/qBittorrent/config/categories.json".C = {
                 argument = "${categoriesFile}";
                 user     = "qbittorrent";

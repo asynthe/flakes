@@ -1,8 +1,6 @@
-# The home server: an HP ProLiant ML350e Gen8 v2, adopted in place. See docs/SARTEN.md.
 { config, ... }:
 {
     flake.modules.nixos.host-sarten = { ... }: {
-
         imports = with config.flake.modules.nixos; [
             profile-server
             sarten-hardware sarten-filesystems
@@ -29,11 +27,9 @@
         system.nixos.label = "sarten";
         system.name = "sarten";
         networking.hostName = "sarten";
-        system.stateVersion = "26.05";   # what the box was installed with; do not bump
+        system.stateVersion = "26.05";
         time.timeZone = "America/Santiago";
 
-        # Accounts and their keys come from ../../../auth.nix.
-        # `su` as well as `sudo -i`; same hash as the first admin.
         sys.sops.rootPassword = true;
 
         # ─────────────── Network ───────────────
@@ -55,13 +51,11 @@
 
         sys.jellyfin.mediaDir = "/srv/media";
 
-        # Bound wide but not exposed: the firewall drops these on eno1, tailnet only.
         sys.grafana.bind     = "0.0.0.0";
         sys.prometheus.bind  = "0.0.0.0";
         sys.arr.bind         = "0.0.0.0";
         sys.qbittorrent.bind = "0.0.0.0";
 
-        # Both the tile links and homepage's own Host check are built from this.
         sys.homepage.host = "sarten";
 
         sys.homepage.backgrounds = [
@@ -71,13 +65,11 @@
             ../../../assets/backgrounds/abstract_eva01_teal.jpg
         ];
 
-        # Only director names that title-casing mangles need an entry here.
         sys.arr.directorNames = {
             "wong-kar-wai" = "Wong Kar-wai";
         };
 
         # ─────────────── Incus ───────────────
-        # Incus creates tank/incus itself, so nothing is declared in filesystems.nix.
         virtualisation.incus.ui.enable = true;
         virtualisation.incus.preseed = {
             config."core.https_address" = "0.0.0.0:8443";
@@ -89,7 +81,6 @@
             }];
 
             networks = [
-                # NAT'd, has a route out.
                 {
                     name = "incusbr0";
                     type = "bridge";
@@ -99,7 +90,6 @@
                     };
                 }
 
-                # Pentest targets: no NAT and no uplink, so they reach only each other.
                 {
                     name = "labbr0";
                     type = "bridge";
@@ -121,7 +111,6 @@
                     };
                 }
 
-                # `incus launch <img> victim -p lab` lands on the isolated segment only.
                 {
                     name = "lab";
                     devices = {
@@ -135,7 +124,6 @@
         # ─────────────── Kernel ───────────────
         boot.supportedFilesystems = [ "ext4" "zfs" ];
 
-        # ZFS refuses to import a pool without one; taken from /etc/machine-id.
         networking.hostId = "6d68b7e4";
     };
 }

@@ -1,18 +1,15 @@
 { inputs, ... }:
 {
     flake.modules.nixos.gpg = { pkgs, ... }: {
-        # Changing pinentry needs a `pkill gpg-agent` to take effect.
         programs.gnupg.agent = {
             enable = true;
             pinentryPackage = pkgs.pinentry-curses;
         };
     };
 
-    # The sops-nix wiring only. Per-user password secrets belong to `auth`.
     flake.modules.nixos.sops = { config, lib, pkgs, ... }: {
         imports = [ inputs.sops-nix.nixosModules.sops ];
 
-        # Outside /home, which is not guaranteed mounted when activation unlocks passwords.
         options.sys.sops.ageKeyFile = lib.mkOption {
             type        = lib.types.str;
             default     = "/var/lib/sops/age-keys.txt";
@@ -37,7 +34,7 @@
             environment.systemPackages = [ pkgs.sops pkgs.age ];
             sops.defaultSopsFile = ../../../secrets/secrets.yaml;
             sops.age.keyFile = config.sys.sops.ageKeyFile;
-            sops.age.sshKeyPaths = [];   # don't fall back to the host key
+            sops.age.sshKeyPaths = [];
             sops.gnupg.sshKeyPaths = [];
 
             users.users.root.hashedPasswordFile =

@@ -1,4 +1,3 @@
-# A links page: what runs on this box and where. `host` is what the tiles point at.
 { ... }:
 {
     flake.modules.nixos.homepage = { config, lib, pkgs, ... }: {
@@ -34,7 +33,6 @@
             at   = p: "http://${cfg.host}:${toString p}";
             port = toString cfg.port;
 
-            # Assets come from the read-only store, so wallpapers are inlined and downscaled.
             shrink = img: pkgs.runCommand "homepage-bg-${baseNameOf img}"
                 { nativeBuildInputs = [ pkgs.imagemagick ]; }
                 "magick ${img} -resize 1600x -quality 72 -strip $out";
@@ -57,7 +55,6 @@
                     theme       = "dark";
                     color       = "slate";
                 } // lib.optionalAttrs (cfg.backgrounds != []) {
-                    # Homepage's own blur, not CSS: it dims and desaturates together.
                     background = {
                         image      = dataUri (builtins.head cfg.backgrounds);
                         blur       = "sm";
@@ -67,7 +64,6 @@
                     };
                 };
 
-                # `slate` is grey, and grey is lit pixels; only html/body get the black ground.
                 customCSS = ''
                     html, body {
                         background-color: #000 !important;
@@ -82,7 +78,6 @@
                     }
                 '';
 
-                # settings.yaml holds one image, so rotation is client-side over the inlined set.
                 customJS = lib.mkIf (cfg.backgrounds != []) ''
                     (() => {
                       const imgs = [
@@ -113,7 +108,6 @@
 
                 services = [
                     {
-                        # Ports come from each service's own option, so a move follows.
                         "Media" = [
                             { "Jellyfin" = { href = at 8096;
                                              description = "Library on tank/media"; }; }

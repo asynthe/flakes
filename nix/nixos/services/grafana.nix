@@ -1,4 +1,3 @@
-# Grafana, with the Prometheus datasource provisioned rather than clicked in.
 { ... }:
 {
     flake.modules.nixos.grafana = { config, lib, pkgs, ... }: {
@@ -47,10 +46,8 @@
                     http_port = cfg.port;
                 };
 
-                # 26.05 refuses to start without one; local-only, so not in sops.
                 settings.security.secret_key = "$__file{${keyPath}}";
 
-                # Provisioned, so the datasource survives a wiped /var/lib/grafana.
                 provision.datasources.settings.datasources = [{
                     name      = "Prometheus";
                     type      = "prometheus";

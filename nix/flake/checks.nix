@@ -1,4 +1,3 @@
-# `nix flake check` builds every machine, so a broken host is caught before a deploy.
 { config, lib, inputs, ... }:
 {
     perSystem = { system, ... }: {

@@ -15,7 +15,6 @@
 
         networking.interfaces.tailscale0.useDHCP = false;
 
-        # Quicker boot
         systemd.network.wait-online.enable = false;
         boot.initrd.systemd.network.wait-online.enable = false;
     };
