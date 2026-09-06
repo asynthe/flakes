@@ -12,8 +12,14 @@
 
             env = lib.mkOption {
                 type        = lib.types.attrsOf lib.types.str;
-                default     = { CLAUDE_CODE_OAUTH_TOKEN = "hermes/CLAUDE_CODE_OAUTH_TOKEN"; };
-                description = "Provider env vars mapped to their sops key paths; `{}` defers auth to `hermes auth`";
+                default     = { };
+                example     = { CLAUDE_CODE_OAUTH_TOKEN = "hermes/CLAUDE_CODE_OAUTH_TOKEN"; };
+                description = ''
+                    Provider env vars mapped to their sops key paths. Empty by
+                    default, which defers auth to `hermes auth` on the machine
+                    and needs no secret; naming a key here requires it to exist
+                    in secrets.yaml or the build fails.
+                '';
             };
 
             dashboard = lib.mkEnableOption "the browser admin panel and /api sockets";

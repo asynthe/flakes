@@ -78,13 +78,16 @@
                 if not key:
                     raise SystemExit("no ApiKey in radarr's config.xml yet")
 
+
                 def api(path):
                     req = urllib.request.Request(url + "/api/v3/" + path, headers={"X-Api-Key": key})
                     with urllib.request.urlopen(req, timeout=30) as resp:
                         return json.load(resp)
 
+
                 def display(slug):
                     return names.get(slug) or " ".join(w.capitalize() for w in slug.split("-"))
+
 
                 tags = {t["id"]: t["label"].lower() for t in api("tag")}
 

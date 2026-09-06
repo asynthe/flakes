@@ -18,7 +18,7 @@ you actually want local inference.
 | option | default | why it varies |
 | --- | --- | --- |
 | `sys.hermes.model` | `anthropic/claude-opus-4.6` | `<provider>/<model>` |
-| `sys.hermes.env` | `{ CLAUDE_CODE_OAUTH_TOKEN = "hermes/CLAUDE_CODE_OAUTH_TOKEN"; }` | env var → sops key path; `{}` skips sops entirely |
+| `sys.hermes.env` | `{ }` | env var → sops key path; empty means no sops secret and `hermes auth` at runtime |
 | `sys.hermes.dashboard` | `false` | `sarten` wants the admin panel, laptop does not |
 | `sys.hermes.bind` | `127.0.0.1` | `sarten` binds its tailscale name |
 | `sys.hermes.waitForHost` | `false` | poll until `bind` resolves — tailscaled loses the boot race otherwise |
@@ -26,7 +26,14 @@ you actually want local inference.
 `p1` takes the defaults. `sarten` sets `dashboard = true`, `bind = "sarten"`,
 `waitForHost = true`.
 
-## The secret
+## Auth
+
+The default is `sys.hermes.env = { }`: no sops secret, and the agent
+authenticates on the machine with `hermes auth`. That is the setting `sarten`
+runs, and it keeps the aspect free of any hard dependency on a key existing in
+`secrets.yaml` — a host opts into token auth rather than inheriting it.
+
+## The secret, if you opt in
 
 `environmentFiles` gets dotenv *contents*, not a single value — one `KEY=value`
 per line. Rather than storing that blob verbatim, the aspect keeps each variable
@@ -47,10 +54,12 @@ actually reads. Adding a provider is one line:
 sys.hermes.env.OPENAI_API_KEY = "hermes/OPENAI_API_KEY";
 ```
 
-Until those keys exist, activation fails: sops-nix errors on a declared secret
-that is missing from the file. To rebuild before then, set
-`sys.hermes.env = {}` on the host and authenticate at runtime with `hermes auth`
-instead — the template and the secrets both disappear with it.
+Naming a key that the file does not contain fails the **build**, not the
+activation: sops-nix validates the manifest while building the system, and key
+names are plaintext in `secrets.yaml` even though values are not. So an opt-in
+that gets ahead of the secret is caught on the workstation, never on the
+machine. Leaving `sys.hermes.env` at its `{ }` default takes the template and
+the secrets with it.
 
 The option type is `str`, not `path`, on purpose. A Nix path literal would copy
 the secret into `/nix/store`, which is world-readable.
