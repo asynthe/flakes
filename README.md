@@ -129,12 +129,25 @@ are fine alongside ed25519 ones — any current client signs with `rsa-sha2-256`
 or `-512`, which OpenSSH still accepts; only the old SHA-1 `ssh-rsa` signature
 algorithm is disabled, and that is a client-side detail.
 
-The one trap: the password hash is `neededForUsers`, which means sops decrypts it
-early, before `/home` is necessarily mounted, so a `passwordKey` naming an entry
-that does not exist in `secrets.yaml` fails the *entire* activation rather than
-just that account. **Add the sops entry before the deploy that adds the user**,
-not after. A non-admin whose hash is not ready yet can be left at the default
-`null` in the meantime; an admin cannot, because of the assertion above.
+The ordering matters, and sops-nix enforces it for you. A key's *name* is
+plaintext in `secrets.yaml` even though its value is not, so
+`sops-install-secrets` validates the manifest at **build** time and refuses to
+produce a system that names a key the file does not contain:
+
+```
+manifest is not valid: secret password-asynthe in ...-secrets.yaml
+is not valid: the key 'users/asynthe' cannot be found
+```
+
+That is a `nixos-rebuild build` and `nix flake check` failure, not an activation
+one, so a forgotten sops entry never reaches the machine. Add the entry first
+and the build goes through. A non-admin whose hash is not ready yet can be left
+at the default `null` in the meantime; an admin cannot, because of the assertion
+above.
+
+The hash is also `neededForUsers`, which means sops decrypts it into
+`/run/secrets-for-users` early in activation, before `/home` is necessarily
+mounted, so that account creation can use it.
 
 Removing a user is the same file, in reverse — and it is a real removal.
 `users.mutableUsers = true` does not protect an account that this flake declared

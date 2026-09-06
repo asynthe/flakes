@@ -126,10 +126,11 @@ account *adopted* from a previous install would keep whatever password it had an
 needs `sudo passwd -l <name>` once.
 
 `root` is the mirror image of that. `sys.sops.rootPassword = true` points it at
-the same hash as `meow`, so `su` works and nothing new is granted — `meow` is in
-`wheel` and already sudos to root. It reuses that secret rather than a
-`users/root` key because a key missing from `secrets.yaml` fails activation
-outright. But root's shadow entry predates this flake, so the same trap applies:
+the same hash as the first admin, so `su` works and nothing new is granted —
+that account is in `wheel` and already sudos to root. It reuses that secret
+rather than a `users/root` key so there is one less name that has to exist in
+`secrets.yaml`; sops-nix validates those names at build time and refuses to
+build a system naming one that is absent. But root's shadow entry predates this flake, so the same trap applies:
 the declaration is inert here until `sudo passwd root` is run once. A host
 installed fresh gets it without that step.
 
