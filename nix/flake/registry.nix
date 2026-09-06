@@ -1,0 +1,7 @@
+# Enables `flake.modules.<class>.<name>`, the registry every aspect writes into.
+{ inputs, ... }:
+{
+    imports = [ inputs.flake-parts.flakeModules.modules ];
+
+    systems = [ "x86_64-linux" "aarch64-linux" ];
+}
