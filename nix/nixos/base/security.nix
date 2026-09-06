@@ -8,6 +8,7 @@
         };
     };
 
+    # The sops-nix wiring only. Per-user password secrets belong to `auth`.
     flake.modules.nixos.sops = { config, lib, pkgs, ... }: {
         imports = [ inputs.sops-nix.nixosModules.sops ];
 
@@ -26,8 +27,9 @@
             type        = lib.types.bool;
             default     = false;
             description = ''
-                Give root the same hash as sys.user so `su` works. Grants
-                nothing new: sys.user is in wheel and already sudos to root.
+                Give root the same hash as the first admin in auth.nix, so `su`
+                works. Grants nothing new: that account is in wheel and already
+                sudos to root.
             '';
         };
 
@@ -38,18 +40,9 @@
             sops.age.sshKeyPaths = [];   # don't fall back to the host key
             sops.gnupg.sshKeyPaths = [];
 
-            sops.secrets.user-password = {
-                key            = "users/${config.sys.user}";
-                neededForUsers = true;   # decrypts into /run/secrets-for-users
-            };
-
-            users.users.${config.sys.user}.hashedPasswordFile =
-                config.sops.secrets.user-password.path;
-
-            # Reuses sys.user's hash; a missing users/root key would fail activation outright.
             users.users.root.hashedPasswordFile =
                 lib.mkIf config.sys.sops.rootPassword
-                    config.sops.secrets.user-password.path;
+                    config.sops.secrets."password-${lib.head config.sys.admins}".path;
         };
     };
 }

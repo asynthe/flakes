@@ -4,11 +4,6 @@
 {
     flake.modules.nixos.core = { config, lib, ... }: {
         options.sys = {
-            user = lib.mkOption {
-                type        = lib.types.str;
-                description = "Primary system user";
-            };
-
             flake = lib.mkOption {
                 type        = lib.types.str;
                 default     = "/home/meow/flakes";
@@ -33,8 +28,8 @@
 
                 sshUser = lib.mkOption {
                     type        = lib.types.str;
-                    default     = config.sys.user;
-                    description = "Account deploy-rs ssh's in as; its key must be in sys.ssh.authorizedKeys";
+                    default     = lib.head config.sys.admins;
+                    description = "Account deploy-rs ssh's in as; its key must be in auth.nix";
                 };
 
                 user = lib.mkOption {

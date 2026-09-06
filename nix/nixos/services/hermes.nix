@@ -60,7 +60,8 @@
                 backend.waitFor = lib.mkIf config.sys.hermes.waitForHost "hostname";
             };
 
-            users.users.${config.sys.user}.extraGroups = [ "hermes" ];
+            users.users = lib.genAttrs config.sys.admins
+                (_: { extraGroups = [ "hermes" ]; });
         };
     };
 }

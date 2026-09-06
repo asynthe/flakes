@@ -1,7 +1,7 @@
 # The home server: an HP ProLiant ML350e Gen8 v2, adopted in place. See docs/SARTEN.md.
 { config, ... }:
 {
-    flake.modules.nixos.host-sarten = { pkgs, ... }: {
+    flake.modules.nixos.host-sarten = { ... }: {
 
         imports = with config.flake.modules.nixos; [
             profile-server
@@ -32,23 +32,9 @@
         system.stateVersion = "26.05";   # what the box was installed with; do not bump
         time.timeZone = "America/Santiago";
 
-        sys.user = "meow";
-
-        # `su` as well as `sudo -i`; same hash as meow.
+        # Accounts and their keys come from ../../../auth.nix.
+        # `su` as well as `sudo -i`; same hash as the first admin.
         sys.sops.rootPassword = true;
-
-        # Key-only, no password, not in wheel: can ssh in but cannot sudo or su.
-        users.users.user = {
-            isNormalUser = true;
-            shell = pkgs.zsh;
-        };
-        sys.ssh.extraUsers = [ "user" ];
-
-        # A non-empty list switches password auth off; losing p1's key locks the box.
-        sys.ssh.authorizedKeys = [
-            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH0H7gtdrNpsghM6LQ3jPDoeDkJMQW4/YDfc+DzMF1/j meow@p1"
-            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGDnUPjUAi2Red+yEOocv3LorVYbA3VHTI6z4QjGX+9T s24"
-        ];
 
         # ─────────────── Network ───────────────
         networking.useDHCP = false;
@@ -59,8 +45,8 @@
         networking.nameservers = [ "192.168.1.1" "1.1.1.1" ];
 
         # ─────────────── Deploy ───────────────
-        # Over the tailnet, so a LAN or firewall change cannot strand the deploy.
-        sys.deploy.hostname = "sarten";
+        sys.deploy.hostname = "192.168.1.135";
+        sys.deploy.sshUser  = "asynthe";
 
         # ─────────────── Services ───────────────
         sys.hermes.dashboard   = true;

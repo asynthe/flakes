@@ -25,7 +25,8 @@
                 "d ${config.sys.jellyfin.mediaDir} 0775 jellyfin jellyfin - -"
             ];
 
-            users.users.${config.sys.user}.extraGroups = [ "jellyfin" ];
+            users.users = lib.genAttrs config.sys.admins
+                (_: { extraGroups = [ "jellyfin" ]; });
         };
     };
 }

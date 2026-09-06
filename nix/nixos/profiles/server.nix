@@ -6,7 +6,7 @@
         imports = with config.flake.modules.nixos; [
             core cli
             net-base ssh
-            sops deploy
+            auth sops deploy
             tailscale
             git neovim nh
             node-exporter smartd

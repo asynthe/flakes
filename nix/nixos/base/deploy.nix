@@ -17,7 +17,11 @@
                 }];
 
             # Lets the deployer push a closure it built and never signed.
-            nix.settings.trusted-users = [ config.sys.deploy.sshUser ];
+            # `auth` already trusts every admin, which sshUser usually is.
+            nix.settings.trusted-users =
+                lib.optional
+                    (!lib.elem config.sys.deploy.sshUser config.sys.admins)
+                    config.sys.deploy.sshUser;
         };
     };
 }

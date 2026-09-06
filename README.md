@@ -6,6 +6,7 @@ auto-imported by [`import-tree`], and nothing is imported by hand.
 
 ```
 flake.nix                  the only entry point: mkFlake (import-tree ./nix)
+auth.nix                   who may log in, and with which key
 nix/
   flake/
     registry.nix           turns on flake.modules.<class>.<name>
@@ -15,7 +16,7 @@ nix/
     devshell.nix           deploy-rs, sops, age, ssh-to-age
   nixos/
     options.nix            values that differ between machines
-    base/                  what any machine gets: core cli net-base ssh sops boot deploy
+    base/                  what any machine gets: core cli auth net-base ssh sops boot deploy
     profiles/              role bundles; a host names one instead of thirty aspects
     services/              one file per service
   hosts/
@@ -55,9 +56,10 @@ imports = with config.flake.modules.nixos; [
 
 networking.hostName = "<name>";
 system.stateVersion = "26.05";
-sys.user = "meow";
-sys.ssh.authorizedKeys = [ "ssh-ed25519 ... meow@p1" ];
+sys.deploy.hostname = "<ip or tailnet name>";
 ```
+
+Accounts come from `auth.nix`, so there are none to declare here.
 
 That is the whole registration — `nix/flake/hosts.nix` picks it up by its
 `host-` prefix, and `profile-server` brought in `deploy`, so it is a deploy-rs
@@ -88,9 +90,39 @@ and `magicRollback` reverts if the deployer cannot reach the machine afterwards
 — which is what saves a box from a bad firewall or network change. Set
 `sys.deploy.magicRollback = false` only for a machine you can physically reach.
 
-Deploy-rs ssh's in as `sys.deploy.sshUser` (default `sys.user`) and sudos to
-root. The `deploy` aspect grants that one account passwordless sudo, because a
-password prompt mid-deploy hangs rather than fails.
+Deploy-rs ssh's in as `sys.deploy.sshUser` (default: the first admin in
+`auth.nix`) and sudos to root. The `deploy` aspect grants that one account
+passwordless sudo, because a password prompt mid-deploy hangs rather than fails.
+
+## Accounts
+
+`auth.nix` at the repo root is the whole user list, shared by every machine. It
+is plain data, not a module -- it sits outside `nix/` so import-tree leaves it
+alone, and `nix/nixos/base/auth.nix` turns it into accounts.
+
+```nix
+kazu = {
+    admin       = true;                 # wheel, and a nix daemon trusted-user
+    passwordKey = "users/kazu";         # where the hash lives in secrets.yaml
+    keys        = [ "ssh-rsa AAAA..." ];
+};
+```
+
+Every field has a default, so an entry can be just a `keys` list. An account
+with no keys cannot log in at all; `passwordKey = null` locks the password
+instead, which leaves key-only ssh working and `sudo` not. Admins are added to
+every service group an aspect hands out -- `media`, `jellyfin`, `docker`,
+`incus-admin`, `hermes` -- so there is no per-user wiring anywhere else.
+
+Adding a password is the one step that touches sops:
+
+```bash
+mkpasswd -m yescrypt         # paste the hash under `users:`
+sops secrets/secrets.yaml
+```
+
+A `passwordKey` naming an entry that does not exist fails the entire
+activation, not just that account -- the hash is `neededForUsers`.
 
 ## Secrets
 

@@ -1,7 +1,8 @@
-# Imported by every machine: nix daemon settings, the primary user, locale.
+# Imported by every machine: nix daemon settings, locale. Accounts come from the
+# `auth` aspect.
 { ... }:
 {
-    flake.modules.nixos.core = { config, pkgs, ... }: {
+    flake.modules.nixos.core = { ... }: {
         nixpkgs.config.allowUnfree = true;
 
         nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -11,13 +12,7 @@
         i18n.defaultLocale = "en_US.UTF-8";
         services.fstrim.enable = true;
 
-        # Shell
         programs.zsh.enable = true;
-        users.users.${config.sys.user} = {
-            shell = pkgs.zsh;
-            isNormalUser = true;
-            extraGroups = [ "wheel" ];
-        };
 
         security.sudo.extraConfig = ''
             # Ask for password every 2 hours

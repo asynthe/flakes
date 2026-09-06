@@ -77,9 +77,10 @@ available. There is no second way in over the LAN.
 
 ## Access
 
-`sys.ssh.authorizedKeys` is non-empty, which is what turns password auth off —
-the list is the only way in, and `meow@p1` is first in it because `p1` is the
-machine that deploys this one. Root login is off.
+Accounts come from `auth.nix` at the repo root, not from this host's file: two
+admins, `asynthe` (keys `p1` and `s24`) and `kazu`, both in `wheel` and both nix
+daemon trusted-users. A non-empty key list is what turns password auth off, so
+those keys are the only way in. Root login is off.
 
 The installer's original `sarten` *account* -- same word as the host name, unrelated thing -- did **not** survive the first switch,
 and `users.mutableUsers = true` is not the escape hatch it looks like: it allows
@@ -89,17 +90,14 @@ and `update-users-groups.pl` removed it the moment it stopped being declared.
 Only `/home/sarten` is left behind. Anything that has to outlive a switch has to
 be in this flake.
 
-The fallback is therefore whatever else is in the key list. That is one key,
-`s24`, so the margin is thin: if both it and `p1`'s key go, the only way back in
-is the physical console.
+The fallback is therefore whatever else is in the key list. Until `kazu`'s RSA
+key is filled in that is one key, `s24`, so the margin is thin: if both it and
+`p1`'s key go, the only way back in is the physical console.
 
-A second account, `user`, is declared in `default.nix` as a key-only login: no
-password, not in `wheel`, so it can ssh in and cannot `sudo` or `su`. The same
-keys reach it through `sys.ssh.extraUsers` — the `ssh` aspect always includes
-`sys.user` and appends that list, so nothing set there can lock `meow` out. It is
-not named after the host, which is what made the installer's `sarten` account
-confusing, and it is not a system user either: `jellyfin` and `hermes` are those,
-with no shell and no home.
+The same rule applies to `meow`. It was the account on this box until
+2026-09-05 and it is not in `auth.nix`, so the switch that introduces `asynthe`
+removes it — `/home/meow` is left behind, owned by a uid nothing claims. Move
+it before that switch, not after.
 
 One nixpkgs trap worth knowing, which this account happens to sidestep. Under
 `users.mutableUsers = true` an *existing* `/etc/shadow` entry is carried over

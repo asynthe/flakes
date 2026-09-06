@@ -175,7 +175,8 @@
 
             # ─────────────── Library ───────────────
             users.groups.${cfg.group} = { };
-            users.users.${config.sys.user}.extraGroups = [ cfg.group ];
+            users.users = lib.genAttrs config.sys.admins
+                (_: { extraGroups = [ cfg.group ]; });
 
             # Setgid keeps files in the group whoever writes them; the media root is jellyfin's.
             systemd.tmpfiles.rules = map (d: "d ${d} 2775 root ${cfg.group} - -") [

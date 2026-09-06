@@ -19,7 +19,7 @@ started shadowing ssh forwards to the real one.
 | `sys.jellyfin.mediaDir` | `/srv/media` | library root, `0775 jellyfin:jellyfin` |
 | `sys.jellyfin.openFirewall` | `false` | opens 8096/8920 to the LAN |
 
-`sys.user` is added to the `jellyfin` group so you can drop files into the
+Every admin in `auth.nix` is added to the `jellyfin` group so you can drop files into the
 library without sudo. Log out and back in after the first switch.
 
 ### Impermanence is the trap
@@ -203,7 +203,7 @@ Jellyfin is deliberately *not* in the group. It only reads, and every directory
 is `o+rx` with every file `o+r`, so it needs nothing. That keeps it running as
 `jellyfin:jellyfin` and keeps its own `PrivateUsers=true` out of the question.
 
-`sys.user` is in `media`, so you can drop files in without sudo. Log out and back
+Every admin in `auth.nix` is in `media`, so you can drop files in without sudo. Log out and back
 in after the first switch.
 
 ### Reaching them

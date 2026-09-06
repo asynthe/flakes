@@ -1,8 +1,9 @@
 { ... }:
 {
-    flake.modules.nixos.docker = { config, pkgs, ... }: {
+    flake.modules.nixos.docker = { config, lib, pkgs, ... }: {
         virtualisation.docker.enable = true;
-        users.users.${config.sys.user}.extraGroups = [ "docker" ];
+        users.users = lib.genAttrs config.sys.admins
+            (_: { extraGroups = [ "docker" ]; });
 
         # Upstream compose stacks are driven by hand, so it needs an interactive PATH.
         environment.systemPackages = [ pkgs.docker-compose ];
@@ -14,9 +15,10 @@
             else "overlay2";
     };
 
-    flake.modules.nixos.incus = { config, ... }: {
+    flake.modules.nixos.incus = { config, lib, ... }: {
         virtualisation.incus.enable = true;
         networking.nftables.enable = true;
-        users.users.${config.sys.user}.extraGroups = [ "incus-admin" ];
+        users.users = lib.genAttrs config.sys.admins
+            (_: { extraGroups = [ "incus-admin" ]; });
     };
 }

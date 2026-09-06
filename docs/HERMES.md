@@ -85,7 +85,7 @@ declarative default. Setting `sys.hermes.dashboard = true` adds the separate
 `addToSystemPackages = true` puts `hermes` on PATH *and* exports
 `HERMES_HOME=/var/lib/hermes/.hermes` system-wide, so an interactive shell and
 the daemon share sessions, skills and cron. That dir is `2770 hermes:hermes`,
-which is why the aspect adds `sys.user` to the `hermes` group — log out and back
+which is why the aspect adds every admin in `auth.nix` to the `hermes` group — log out and back
 in after the first switch or you get EACCES.
 
 Under impermanence, `/var/lib/hermes` is persisted; without it every reboot
