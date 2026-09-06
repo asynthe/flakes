@@ -19,4 +19,14 @@
         users.users = lib.genAttrs config.sys.admins
             (_: { extraGroups = [ "incus-admin" ]; });
     };
+
+    flake.modules.nixos.k3s = { pkgs, ... }: {
+        environment.systemPackages = with pkgs; [ kubectl kubernetes-helm ];
+
+        services.k3s = {
+            enable = true;
+            role = "server";
+            extraFlags = toString [ "--write-kubeconfig-mode=644" ];
+        };
+    };
 }
