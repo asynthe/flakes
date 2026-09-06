@@ -164,9 +164,62 @@ puts it there on a fresh install, and it is a manual `scp` on a box adopted in
 place.
 
 Every machine currently shares one age identity. To give a host its own instead,
-convert its ssh host key and add it alongside the admin key; the recipe is in the
-comment at the top of `.sops.yaml`. A host holding only its own key cannot read
-another machine's secrets, which is the point.
+convert its ssh host key and add it to `.sops.yaml` alongside the admin key:
+
+```bash
+ssh-keyscan -t ed25519 <host> | ssh-to-age
+sops updatekeys secrets/secrets.yaml
+```
+
+A host holding only its own key cannot read another machine's secrets, which is
+the point.
+
+### Onboarding another admin
+
+**A new admin needs no age key to build or deploy.** Nix builds are sandboxed
+and never see anyone's home directory: `secrets.yaml` is copied into the store
+and `sops-install-secrets` only checks that the key *names* it references exist,
+which is plaintext. Decryption happens on the target machine at activation,
+using the identity already sitting in its `/var/lib/sops/age-keys.txt`. So a
+co-admin can clone, edit aspects, `nixos-rebuild build`, and `deploy` on day
+one, having exchanged nothing.
+
+An age key is only needed to **read or change a secret**. When that day comes:
+
+```bash
+age-keygen -o ~/.config/sops/age/keys.txt     # on their machine
+```
+
+That prints a `# public key: age1...` line — the public half, which is the only
+part that travels. Add it to `.sops.yaml` as a second anchor, list it in the key
+group beside `*admin`, then re-encrypt the file to both recipients and commit:
+
+```bash
+sops updatekeys secrets/secrets.yaml
+```
+
+Worth being deliberate about, because it is all-or-nothing: `secrets.yaml` is one
+file, so a new recipient can read everything in it — every login hash, every API
+token. Split it into two files with separate `creation_rules` if that ever stops
+being the right answer.
+
+### Passwords
+
+A new admin generates their own hash and sends *that*, so nobody else ever
+handles their password:
+
+```bash
+mkpasswd -m yescrypt
+```
+
+Paste it under `users:` in `secrets.yaml` as `<name>: <hash>`. The hash is not
+secret in the way a password is, but it is offline-crackable, so it wants a real
+password behind it.
+
+They cannot change it with `passwd` on the machine. `hashedPasswordFile` is
+declarative and re-applied on every activation, so a local change survives until
+the next switch and then silently reverts. Changing a password means a new hash
+in sops.
 
 ## Adding a machine
 

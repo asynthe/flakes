@@ -1,9 +1,3 @@
-# SOPS config for this repo's secrets. Same age identity as dots and infra-lach.
-#
-# Per-host keys: convert a machine's ssh host key with
-#   ssh-keyscan -t ed25519 <host> | ssh-to-age
-# add it to a rule below alongside the admin key, then `sops updatekeys`.
-# A host that holds only its own key cannot read another machine's secrets.
 keys:
   - &admin age1hp0m7d3rp7faekqftkjfqy600w38h2mtrhele0unwupnzr0yx3gs6xvvy7
 
