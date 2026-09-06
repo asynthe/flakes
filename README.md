@@ -102,5 +102,15 @@ there on a fresh install, and it is a manual copy on an adopted box.
 To give a machine its own key instead of sharing the admin one, see the comment
 at the top of `.sops.yaml`.
 
+## Docs
+
+| | |
+|---|---|
+| [SARTEN.md](docs/SARTEN.md) | the ProLiant: install, disks, secrets, rebuilding |
+| [MEDIA.md](docs/MEDIA.md)   | Jellyfin, the arrs, qBittorrent, the by-director tree |
+| [WAZUH.md](docs/WAZUH.md)   | the SIEM, and what a rebuild cannot reproduce |
+| [LAB.md](docs/LAB.md)       | the SOC lab this box is being built into |
+| [HERMES.md](docs/HERMES.md) | the agent |
+
 [dendritic pattern]: https://github.com/mightyiam/dendritic
 [`import-tree`]: https://github.com/vic/import-tree

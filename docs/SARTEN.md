@@ -144,18 +144,26 @@ From a checkout on `p1` — builds locally, pushes the closure, the ProLiant
 compiles nothing:
 
 ```bash
+deploy .#sarten
+```
+
+`autoRollback` reverts a failed activation and `magicRollback` reverts if `p1`
+cannot reach the box afterwards, which is the net under a bad firewall or
+network change. The `deploy` aspect gives `meow` passwordless sudo on this
+machine, because deploy-rs cannot answer a password prompt — it hangs on one.
+
+`nixos-rebuild` still works if you want it:
+
+```bash
 nixos-rebuild switch --flake .#sarten --target-host meow@192.168.1.135 \
     --sudo --ask-sudo-password
 ```
-
-`meow`'s password comes from sops and `wheel` is not passwordless, so the sudo
-prompt is unavoidable unless you decide otherwise.
 
 Or on the box itself:
 
 ```bash
 ssh meow@192.168.1.135
-nh os switch -H sarten /home/meow/dots
+nh os switch -H sarten /home/meow/flakes
 ```
 
 Once it is on the tailnet, `sarten` works in place of the IP.
