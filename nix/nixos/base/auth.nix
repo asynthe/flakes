@@ -1,13 +1,14 @@
 { lib, ... }:
 let
-    defaults = name: {
+    defaults = {
         admin       = false;
-        passwordKey = "users/${name}";
+        passwordKey = null;
+        groups      = [];
         keys        = [];
     };
 
     people = lib.mapAttrs
-        (name: person: defaults name // person)
+        (_: person: defaults // person)
         (import ../../../auth.nix);
 
     admins = lib.attrNames (lib.filterAttrs (_: person: person.admin) people);
@@ -21,10 +22,16 @@ in {
         };
 
         config = {
+            assertions = lib.mapAttrsToList (name: person: {
+                assertion = person.admin -> person.passwordKey != null;
+                message = "auth.nix: ${name} is an admin and needs a passwordKey."
+                    + " wheel requires a password, so a locked account can never sudo.";
+            }) people;
+
             users.users = lib.mapAttrs (name: person: {
                 isNormalUser = true;
                 shell        = pkgs.zsh;
-                extraGroups  = lib.optional person.admin "wheel";
+                extraGroups  = person.groups ++ lib.optional person.admin "wheel";
 
                 openssh.authorizedKeys.keys = person.keys;
 

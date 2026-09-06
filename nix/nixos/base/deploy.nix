@@ -4,12 +4,11 @@
         config = {
             sys.deploy.enabled = true;
 
-            security.sudo.extraRules =
-                lib.mkIf (config.sys.deploy.sshUser != "root") [{
-                    users    = [ config.sys.deploy.sshUser ];
-                    runAs    = config.sys.deploy.user;
-                    commands = [{ command = "ALL"; options = [ "NOPASSWD" ]; }];
-                }];
+            security.sudo.extraRules = [{
+                users    = config.sys.admins;
+                runAs    = config.sys.deploy.user;
+                commands = [{ command = "ALL"; options = [ "NOPASSWD" ]; }];
+            }];
 
             nix.settings.trusted-users =
                 lib.optional
