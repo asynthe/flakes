@@ -125,6 +125,10 @@ One ZFS dataset, `tank/media`, holds all of it:
     └── General/<Movie (Year)>           →  ../../../movies/...
 ```
 
+The hand-curated music library is not here — it mirrors from the laptop into
+`/srv/archive/music`, on its own dataset, for the reasons in
+[ARCHIVE.md](ARCHIVE.md). `music/` above is Lidarr's and only Lidarr's.
+
 Point Jellyfin's libraries at `library/movies`, `series`, `anime` and `music` —
 never at `/srv/media` itself, which would make it scan `downloads/` and index
 half-finished files, and index every movie twice.

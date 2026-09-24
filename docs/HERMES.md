@@ -23,8 +23,12 @@ you actually want local inference.
 | `sys.hermes.bind` | `127.0.0.1` | `sarten` binds its tailscale name |
 | `sys.hermes.waitForHost` | `false` | poll until `bind` resolves — tailscaled loses the boot race otherwise |
 
-`p1` takes the defaults. `sarten` sets `dashboard = true`, `bind = "sarten"`,
-`waitForHost = true`.
+`p1` takes the defaults. `sarten` sets `bind = "sarten"` and
+`waitForHost = true`, and has `dashboard = false` for now: on a non-loopback bind
+the dashboard refuses to start without an auth provider (a
+`dashboard.basic_auth` password hash in `config.yaml`, or `hermes dashboard
+register`). Left on without one, `hermes-backend` crash-loops, and a failing
+unit makes every `deploy` roll back.
 
 ## Auth
 

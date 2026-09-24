@@ -21,6 +21,12 @@
                 description = "Put the dashboard on the LAN; the tiles still point at `host`";
             };
 
+            proxy = lib.mkOption {
+                type        = lib.types.bool;
+                default     = false;
+                description = "Put nginx on port 80 in front and open it, so `http://<host>` is the dashboard";
+            };
+
             backgrounds = lib.mkOption {
                 type        = lib.types.listOf lib.types.path;
                 default     = [];
@@ -131,6 +137,8 @@
                                                description = "Dashboards"; }; }
                             { "Prometheus" = { href = at config.sys.prometheus.port;
                                                description = "Metrics + targets"; }; }
+                            { "Docs"       = { href = at config.sys.docs.port;
+                                               description = "How this box works"; }; }
                         ];
                     }
                     {
@@ -151,6 +159,32 @@
                     }
                 ];
             };
+
+            services.nginx = lib.mkIf cfg.proxy {
+                enable                   = true;
+                recommendedProxySettings = true;
+
+                virtualHosts.${cfg.host} = {
+                    default = true;
+                    locations."/" = {
+                        proxyPass       = "http://127.0.0.1:${port}";
+                        proxyWebsockets = true;
+
+                        # Rewriting Host is why this is spelled out instead of
+                        # `recommendedProxySettings`: reached by LAN name, by IP or
+                        # over the tailnet, the dashboard sees the one host it allows.
+                        recommendedProxySettings = false;
+                        extraConfig = ''
+                            proxy_set_header Host              ${cfg.host}:${port};
+                            proxy_set_header X-Real-IP         $remote_addr;
+                            proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+                            proxy_set_header X-Forwarded-Proto $scheme;
+                        '';
+                    };
+                };
+            };
+
+            networking.firewall.allowedTCPPorts = lib.mkIf cfg.proxy [ 80 ];
         };
     };
 }

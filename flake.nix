@@ -2,7 +2,12 @@
     description = "asynthe's machines -- dendritic";
 
     inputs = {
-        nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+        # The release every host runs. Bumping it is this line plus
+        # `nix flake update nixpkgs`; stateVersion stays where it was installed.
+        nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
+
+        # Opt-in per package as pkgs.unstable.<name>, see nix/nixos/base/unstable.nix.
+        nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
         flake-parts.url = "github:hercules-ci/flake-parts";
         flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";

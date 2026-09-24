@@ -212,6 +212,11 @@ Compose interpolates it in an environment value.
 
 ## Rebuilding from scratch
 
-`/srv/wazuh` is on `tank/wazuh`. If the pool survives, nothing here needs doing
-again. If it does not, repeat *Steps taken* — the checkout is reproducible from
-the tag, and the certificates are regenerated rather than restored.
+`/srv/wazuh` is on `tank/wazuh` and holds only the checkout and the certs. The
+stack's data (indexer, manager queue, logs, `etc`) is in Docker named volumes
+under `/var/lib/docker`, which is the `tank/docker` dataset. If the pool
+survives, nothing here needs doing again.
+
+To rebuild, repeat *Steps taken*: the checkout is reproducible from the tag, and
+the certificates are regenerated rather than restored. Indexed data starts
+empty.

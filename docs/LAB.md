@@ -11,15 +11,22 @@ what to add next, so the work can be picked up cold.
 | --- | --- |
 | Wazuh 4.14.7 | manager, indexer, dashboard on Docker; `https://sarten` |
 | Syslog pipeline | `wazuh-syslog` aspect on `p1` and `sarten`; both reporting |
-| Incus | zfs pool on `tank/incus`, `incusbr0` + `labbr0`, no instances yet |
-| Attacker box | `p1` with `soc-tools` and `pentest` |
+| Incus | storage pool `vm` on the mirrored 500 GB pair, `incusbr0` + `labbr0`, no instances yet |
+| Suricata | `suricata` aspect watching `labbr0`, `eve.json` read by the manager |
+| VM import | `sarten-import-vm` turns a VulnHub-style image into a `labbr0` instance |
+| Segmentation | `sarten-firewall` isolates `labbr0`; `sarten-fwtest` proves it |
 | Transport | tailnet; nothing exposed on the LAN |
 
-Verified working: failed SSH logins on `sarten` and failed `sudo` on `p1` both
-reach the manager and fire rules — 2501 (authentication failure, level 5) and
-2504 (illegal root login, level 9, MITRE `T1548.003`).
+Verified working, host side: failed SSH logins on `sarten` and failed `sudo` on
+`p1` both reach the manager and fire rules 2501 and 2504.
 
-See [docs/WAZUH.md](WAZUH.md) for how the SIEM itself is put together.
+Verified working, network side: a scan between two `labbr0` instances fires a
+Suricata HTTP rule, and the manager decodes it into a Wazuh alert (rule 86601,
+`data.alert.signature` carried through). That is the whole path — attacker →
+`labbr0` → Suricata `eve.json` → manager — end to end.
+
+See [docs/WAZUH.md](WAZUH.md) for the SIEM, and [LAYOUT.md](LAYOUT.md) for the
+disks, pools and the firewall the lab sits behind.
 
 ## What the hardware can carry
 
@@ -55,20 +62,69 @@ Windows 10 client, Sysmon, and the Wazuh agent**. Wazuh's Windows agent is a rea
 MSI and works properly — unlike the NixOS hosts, which get log forwarding only,
 a Windows guest gets full FIM, SCA, syscollector and active response.
 
+## Where the attacker sits
+
+`labbr0` is sealed: [LAYOUT.md](LAYOUT.md#who-may-reach-what) blocks it from the
+LAN, the tailnet, the internet and `incusbr0`, in both directions. So the
+attacker cannot be `p1` reaching in — a vulnerable target reachable from the
+laptop is a pivot onto the whole network. **The attacker is an instance inside
+the lab**, on `labbr0` beside the target, and you drive it from `p1` over the
+tailnet with `incus console <name>` or `incus exec <name> -- …`. Suricata watches
+`labbr0`, so it sees the attacker↔target traffic from the middle.
+
 ## Working pattern: build wet, detonate dry
 
-`labbr0` has `ipv4.nat = false` and no uplink, which is correct for detonation and
-means an instance there cannot download an agent, activate Windows, or pull
-updates. So:
+`ipv4.nat = false` and no uplink means a `labbr0` instance cannot download a
+package, an agent or an OS update. So anything that needs the network is built
+first on `incusbr0`, which is NAT'd:
 
-1. build on `incusbr0` (NAT'd, has a route out) — install the OS, Sysmon, the
-   Wazuh agent, enrol it
-2. `incus snapshot <name> clean`
-3. move the NIC to `labbr0`, or relaunch with `-p lab`, for the attack
+1. build on `incusbr0` — install the OS, tools (nmap and friends on the attacker;
+   Sysmon and the Wazuh agent on a Windows target), enrol the agent
+2. `incus snapshot create <name> clean`
+3. move it to `labbr0`: `incus profile assign <name> lab`, or relaunch `-p lab`
 4. `incus restore <name> clean` afterwards
 
-Step 2 is what makes the lab reusable rather than something rebuilt every
-weekend. On a ZFS pool those snapshots are near-instant and near-free.
+A VulnHub target is the exception: it ships its services pre-installed and needs
+no build step, so it goes straight onto `labbr0`. Step 2 is what makes the lab
+reusable rather than rebuilt every weekend; on ZFS those snapshots are near-free.
+
+## Importing a VulnHub target
+
+`sarten-import-vm NAME IMAGE [SIZE_GIB]` (from `nix/hosts/sarten/lab.nix`) takes
+an `.ova`, `.zip`, or a bare disk image (`.vmdk .qcow2 .vdi .vhd .raw`), unpacks
+it if need be, and writes the largest disk it finds into a new `lab` VM's zvol —
+Incus keeps that volume with no device node, so the tool flips it on for the copy
+and off after. VulnHub images are almost all legacy BIOS, so it sets
+`security.csm=true`.
+
+```bash
+scp target.ova asynthe@sarten:/srv/scratch/
+ssh asynthe@sarten
+sarten-import-vm kioptrix /srv/scratch/target.ova
+incus start kioptrix
+incus console kioptrix           # watch it boot; --type=vga needs a remote client
+incus list kioptrix              # its labbr0 address, once it DHCPs
+incus snapshot create kioptrix clean
+```
+
+Then launch an attacker beside it, built wet and moved dry, and go.
+
+## Suricata
+
+The `suricata` aspect (`nix/nixos/services/suricata.nix`) runs Suricata on
+`labbr0` in IDS mode and writes `eve.json` to `/var/log/suricata`, which the
+Wazuh manager reads through a `:ro` bind mount and its own Suricata decoders.
+`sys.suricata.homeNet` is `labbr0`'s subnet, so "inside" means the lab.
+
+Two things worth knowing, both load-bearing rather than tuning:
+
+- **`af-packet defrag` is off.** With the fanout DEFRAG flag on, capturing the
+  bridge silently swallows the DHCP reply back to instances and they never get a
+  lease. Off, DHCP works and Suricata still reassembles streams at the app layer.
+- **modbus and dnp3 rules are disabled** in `disabledRules`. nixpkgs builds
+  Suricata without those parsers, and a signature for a missing parser is a fatal
+  config error, not a skipped rule — Suricata refuses to start at all. The
+  pattern match survives the daily ruleset update; rule ids would not.
 
 ## Roadmap
 
@@ -76,18 +132,15 @@ Roughly in order of value.
 
 1. **Windows AD pair** — Server as DC plus a Win10 client on `incusbr0`, Sysmon
    and the Wazuh agent on both. Biggest jump in realism available.
-2. **Suricata on `sarten`** — `suricata-8.0.3` is in nixpkgs and Wazuh ships
-   `eve.json` decoders, so network detections land beside host detections with no
-   custom rule writing. Seeing the same attack from both angles is where the
-   learning compounds.
-3. **A vulnerable Linux target on `labbr0`** — something to attack with the
-   tooling already on `p1`, then go find the traces.
-4. **Atomic Red Team** — pre-labelled, MITRE-mapped attacks, so detections can be
+2. **A vulnerable Linux target on `labbr0`** — import one with
+   `sarten-import-vm` and attack it from an attacker instance beside it. The
+   detection path is already proven; this is the first real target through it.
+3. **Atomic Red Team** — pre-labelled, MITRE-mapped attacks, so detections can be
    checked rather than guessed at.
-5. **Custom rules and decoders** — the media services currently land as generic
+4. **Custom rules and decoders** — the media services currently land as generic
    syslog: searchable, no alerts. Writing decoders for one of them is what makes
    the rule syntax stick.
-6. **`docker-listener` wodle** — needs `/var/run/docker.sock` bound into the
+5. **`docker-listener` wodle** — needs `/var/run/docker.sock` bound into the
    manager; gives container lifecycle events.
 
 ## Learning the tooling

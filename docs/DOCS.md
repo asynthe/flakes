@@ -1,7 +1,7 @@
 # Reference
 
 How this repo works, and the traps worth knowing before you trip on them.
-[README](../README.md) is the short version.
+[The overview](index.md) is the short version.
 
 ## The pattern
 
@@ -324,10 +324,32 @@ path, torrent port and web UI address are changed in the aspect and never in the
 web UI. That UI has no password because it is firewalled down to ssh reach and
 the arrs need its API.
 
+**The dashboard on port 80** is proxied rather than moved: `sys.homepage.proxy`
+puts nginx on port 80 in front of `:8082`, because Wazuh's compose stack owns 443
+and a bare `http://sarten` would otherwise reach nothing and get upgraded to it.
+The proxy rewrites `Host` to `<host>:<port>` — the dashboard checks the header
+against `HOMEPAGE_ALLOWED_HOSTS` and would reject the LAN IP or the tailnet name
+otherwise.
+
 **The homepage dashboard** inlines its wallpapers as base64 data URIs, downscaled
 at build time. Homepage's `settings.yaml` holds exactly one background image, so
 rotation is client-side JavaScript over the inlined set, and the assets have to
 be inlined at all because the store is read-only.
+
+**These docs are a build artifact.** `docs` renders `docs/` with mdBook at build
+time and nginx serves the result out of the store on `:8081`. No daemon reads the
+markdown, so a change to a `.md` file appears on the site at the next `deploy`
+and not before. `book.toml` sets `src = "."`, which keeps the chapters editable
+as plain files on GitHub rather than moving them under a `src/` directory — the
+cost is that `SUMMARY.md` has to list every page, and a page missing from it is
+built but unreachable from the sidebar.
+
+**The archive is not the media tree.** `archive` creates `/srv/archive` and
+nothing else — no service on this box writes there. It is separate from
+`/srv/media` because the arr stack renames and deletes inside that tree while the
+laptop's `music_send_to_server.py` is a `--delete` mirror; pointed at one
+directory, the two would take turns destroying each other's work. See
+[ARCHIVE.md](ARCHIVE.md); `tank/archive` is created by hand, not by Nix.
 
 [dendritic pattern]: https://github.com/mightyiam/dendritic
 [`import-tree`]: https://github.com/vic/import-tree

@@ -3,7 +3,7 @@
     flake.modules.nixos.host-sarten = { ... }: {
         imports = with config.flake.modules.nixos; [
             profile-server
-            sarten-hardware sarten-filesystems
+            sarten-hardware sarten-filesystems sarten-firewall sarten-lab
 
             # ─────────────── System ───────────────
             boot-bios gpg
@@ -14,10 +14,11 @@
             # ─────────────── Media ───────────────
             jellyfin
             arr qbittorrent
+            archive
 
             # ─────────────── Monitoring ───────────────
-            prometheus grafana homepage
-            docker wazuh wazuh-syslog
+            prometheus grafana homepage docs
+            docker wazuh wazuh-syslog suricata
 
             # ─────────────── Virtualisation ───────────────
             incus
@@ -45,18 +46,32 @@
         sys.deploy.sshUser  = "asynthe";
 
         # ─────────────── Services ───────────────
-        sys.hermes.dashboard   = true;
+        # Off until it has an auth provider: on a non-loopback bind it refuses to
+        # start without one, and a failing unit makes every deploy roll back.
+        sys.hermes.dashboard   = false;
         sys.hermes.bind        = "sarten";
         sys.hermes.waitForHost = true;
 
         sys.jellyfin.mediaDir = "/srv/media";
+
+        # Music today; anime, book and youtube are the next candidates that fit.
+        sys.archive.trees = [ "music" ];
+
+        # The one other thing besides the dashboard that answers on the LAN.
+        sys.docs.openFirewall = true;
+
+        # The lab bridge is the only thing worth watching: everything else on
+        # this box is either the tailnet or its own traffic.
+        sys.suricata.interface = "labbr0";
+        sys.suricata.homeNet   = "[10.66.66.0/24]";
 
         sys.grafana.bind     = "0.0.0.0";
         sys.prometheus.bind  = "0.0.0.0";
         sys.arr.bind         = "0.0.0.0";
         sys.qbittorrent.bind = "0.0.0.0";
 
-        sys.homepage.host = "sarten";
+        sys.homepage.host  = "sarten";
+        sys.homepage.proxy = true;
 
         sys.homepage.backgrounds = [
             ../../../assets/backgrounds/anime_frieren_field.jpg
@@ -75,9 +90,9 @@
             config."core.https_address" = "0.0.0.0:8443";
 
             storage_pools = [{
-                name   = "default";
+                name   = "vm";
                 driver = "zfs";
-                config.source = "tank/incus";
+                config.source = "vm/incus";
             }];
 
             networks = [
@@ -85,7 +100,7 @@
                     name = "incusbr0";
                     type = "bridge";
                     config = {
-                        "ipv4.address" = "auto";
+                        "ipv4.address" = "10.162.79.1/24";
                         "ipv6.address" = "none";
                     };
                 }
@@ -106,7 +121,7 @@
                 {
                     name = "default";
                     devices = {
-                        root = { path = "/"; pool = "default"; type = "disk"; };
+                        root = { path = "/"; pool = "vm"; type = "disk"; };
                         eth0 = { name = "eth0"; network = "incusbr0"; type = "nic"; };
                     };
                 }
@@ -114,7 +129,7 @@
                 {
                     name = "lab";
                     devices = {
-                        root = { path = "/"; pool = "default"; type = "disk"; };
+                        root = { path = "/"; pool = "vm"; type = "disk"; };
                         eth0 = { name = "eth0"; network = "labbr0"; type = "nic"; };
                     };
                 }

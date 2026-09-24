@@ -5,7 +5,7 @@
             dataDir = lib.mkOption {
                 type        = lib.types.str;
                 default     = "/srv/wazuh";
-                description = "Holds the compose checkout, certs and volumes; put it on the pool";
+                description = "Holds the compose checkout and certs; Docker volumes are under /var/lib/docker";
             };
 
             dashboardPort = lib.mkOption {

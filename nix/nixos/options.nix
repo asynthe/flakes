@@ -4,7 +4,7 @@
         options.sys = {
             flake = lib.mkOption {
                 type        = lib.types.str;
-                default     = "/home/meow/flakes";
+                default     = "/home/meow/git/flakes";
                 description = "Path to this flake, used by nh";
             };
 

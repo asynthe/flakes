@@ -1,18 +1,18 @@
 # `sarten`
 
 HP ProLiant ML350e Gen8 v2, headless, on the LAN and the tailnet. Two Xeon
-E5-2407, 94 GB of RAM, two 500 GB SATA disks on the onboard AHCI controller —
+E5-2407, 94 GB of RAM, four SATA disks on the onboard AHCI controller —
 despite the ProLiant badge there is no Smart Array in this one, so `hpsa` and
 `smartpqi` are not needed and are not loaded.
 
 **It was adopted, not installed.** The box was already running a stock NixOS
 26.05 from the graphical installer when it joined this flake, so there is no
-disko step and no `nixos-anywhere` run: `sda` keeps the layout the installer
-gave it, and the flake was pointed at the machine as it stood. That is the one
+disko step and no `nixos-anywhere` run: the disks were partitioned by hand, and
+the flake was pointed at the machine as it stood. That is the one
 real difference from `p1`, and it has a consequence worth stating plainly —
 **this host's partitioning is not declarative.** Rebuilding it from bare metal
-means redoing the manual steps in [Rebuilding from scratch](#rebuilding-from-scratch),
-not just running one command.
+means redoing those steps by hand, not just running one command. The move to a
+disko-declared layout is sketched in [LAYOUT.md](LAYOUT.md#later-4-4-tb).
 
 The host is three files, and only `default.nix` is meant to be edited often:
 
@@ -20,32 +20,38 @@ The host is three files, and only `default.nix` is meant to be edited often:
 | --- | --- |
 | `nix/hosts/sarten/default.nix` | the aspect list, the per-host `sys.*` values, the static network |
 | `nix/hosts/sarten/filesystems.nix` | the `sarten-filesystems` aspect — `fileSystems`, swap, GRUB's target disk |
+| `nix/hosts/sarten/firewall.nix` | the `sarten-firewall` aspect — the guard table, bridge ports, `sarten-fwtest` |
 | `nix/hosts/sarten/hardware.nix` | the `sarten-hardware` aspect — initrd modules, microcode |
 
 ## Disk layout
 
-Legacy BIOS, no encryption. `sda` is as the installer left it and carries the
-whole operating system; the data lives on a ZFS mirror that the root disk stays
-out of.
+Legacy BIOS, no encryption. The full inventory of disks, pools, datasets and
+bridges, and the firewall between them, is in [LAYOUT.md](LAYOUT.md). In
+short: root is ext4 on one 2 TB disk, addressed by the labels `root` and `swap`,
+with GRUB installed to that disk by `by-id`. `/boot` is a directory inside root,
+not a partition.
 
-| device | label | contents |
-| --- | --- | --- |
-| `sda1` | `root` | ext4, mounted at `/` — `/boot` is a directory inside it, not a partition |
-| `sda2` | `swap` | swap partition |
+Everything is addressed by label or `by-id`, because `/dev/sd*` is probe order
+and it does change between boots on this machine.
 
-Everything is addressed by label, and GRUB's target disk by `by-id`, because
-`/dev/sd*` is probe order: drives of the same model can swap between reboots.
+A label has to be unique across every attached disk. With two partitions
+labelled `root`, `/dev/disk/by-label/root` points at whichever one udev probed
+last, and the boot mounts that one. Relabel a retired disk before leaving it
+plugged in.
 
 ### `tank`
 
-A hand-made two-disk mirror over the 2 TB pair, imported through
-`boot.zfs.extraPools`. Three datasets: `tank/media` at `/srv/media` is
-Jellyfin's library, `tank/wazuh` at `/srv/wazuh` holds the compose checkout,
-its certs and its container volumes, and `tank/incus` is created by Incus
-itself, which is why `filesystems.nix` never mentions it.
+A single-disk pool on the other 2 TB drive, imported through
+`boot.zfs.extraPools`. `tank/media` at `/srv/media` is Jellyfin's library,
+`tank/archive` at `/srv/archive` is the laptop's mirror, `tank/wazuh` at
+`/srv/wazuh` holds the compose checkout and certs, and `tank/docker` at
+`/var/lib/docker` holds Docker's images and volumes, which is where Wazuh's data
+actually is. Incus instances are on the separate `vm` mirror; Incus creates its
+datasets under `vm/incus` itself, which is why `filesystems.nix` never mentions
+them.
 
-Both mounted datasets are `mountpoint=legacy` so systemd owns the mount rather
-than ZFS, and both mount `nofail` — a data disk that fails to appear must not
+The mounted datasets are `mountpoint=legacy` so systemd owns the mount rather
+than ZFS, and they mount `nofail`: a data disk that fails to appear must not
 hold up boot on a machine with no console attached.
 
 `boot.zfs.forceImportRoot` is **off**. Root is ext4, so ZFS is never in the boot
@@ -201,22 +207,8 @@ Neither is reachable until `tailscale up` has been run.
 
 ## Rebuilding from scratch
 
-The manual steps, in order, if the disks are ever replaced. `sda` is assumed to
-already carry a NixOS install with SSH reachable.
-
-```bash
-# 1. the media disk -- DESTROYS /dev/sdb
-wipefs -a /dev/sdb
-printf 'label: gpt\n,,L\n' | sfdisk /dev/sdb
-mkfs.ext4 -m 0 -L media /dev/sdb1
-
-# 2. labels the flake expects on the root disk
-e2label /dev/sda1 root
-swaplabel -L swap /dev/sda2
-
-# 3. the age identity (see above), then switch
-```
-
-`mkfs.ext4 -m 0` skips the usual 5% reserve. That default exists to keep root
-able to write on a full filesystem; on a disk that holds only a media library it
-is 23 GB thrown away.
+The current partitioning was done by hand and is not worth reproducing. A
+rebuild is the 4× 4 TB layout in [LAYOUT.md](LAYOUT.md#later-4-4-tb), installed
+from the flake with disko and `nixos-anywhere`, and
+[State outside the flake](LAYOUT.md#state-outside-the-flake) is what has to be
+restored or redone afterwards.
